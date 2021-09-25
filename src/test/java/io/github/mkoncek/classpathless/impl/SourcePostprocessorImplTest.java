@@ -80,7 +80,7 @@ public class SourcePostprocessorImplTest {
             classes.add(new IdentifiedBytecode(new ClassIdentifier("postprocessor.AbstractBase$AbstractNestedBase"), is.readAllBytes()));
         }
 
-        var cplc = new CompilerJavac();
+        var cplc = new CompilerJavac(new CompilerJavac.Arguments().useHostSystemClasses(true));
         cplc.setPostProcessor(new AddAbstract());
 
         var provider = new SimpleClassesProvider(classes);

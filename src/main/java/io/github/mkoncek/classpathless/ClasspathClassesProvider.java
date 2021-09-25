@@ -80,7 +80,7 @@ public class ClasspathClassesProvider implements ClassesProvider {
      * @param classpath
      * @return A list of strings representing the roots and /* expanded to jar files
      */
-    static private List<String> obtainClasspath(String classpath) {
+    static List<String> obtainClasspath(String classpath) {
         /// https://docs.oracle.com/javase/8/docs/technotes/tools/windows/classpath.html
 
         var unexpanded = Arrays.asList(classpath.split(CP_SEPARATOR));
@@ -107,7 +107,7 @@ public class ClasspathClassesProvider implements ClassesProvider {
         return result;
     }
 
-    static private Map<String, Path> findAllClasses(List<String> classpath) {
+    static Map<String, Path> findAllClasses(List<String> classpath) {
         /// TODO handle jars
 
         var result = new HashMap<String, Path>();
@@ -132,20 +132,4 @@ public class ClasspathClassesProvider implements ClassesProvider {
 
         return result;
     }
-
-    /// TODO make this into a test case
-    /*
-    public static void main(String[] args) {
-        System.out.println(obtainClasspath("/usr/lib/java"));
-        System.out.println(obtainClasspath("/usr/lib/java/*"));
-        System.out.println(obtainClasspath("/usr/lib/java/*:/home/mkoncek/Upstream/classpathless-compiler/target/classes/org/terminusbrut/classpathless/impl/"));
-        var ccp = new ClasspathClassesProvider(".:target/classes/");
-        ccp.getClass(new ClassIdentifier("InMemoryFileManager$1.class"));
-        System.out.println(ccp.classesToClassFilePaths);
-        for (var bc : ccp.getClass(new ClassIdentifier("io.github.mkoncek.classpathless.impl.Compiler$1"))) {
-            System.out.println(bc.getFile());
-        }
-        System.out.println(ccp.getClassPathListing());
-    }
-     */
 }

@@ -70,7 +70,7 @@ public class Tool {
 
         var ccp = new ClasspathClassesProvider(arguments.classpath);
 
-        var compiler = new CompilerJavac(new CompilerJavac.Arguments().useHostJavaClasses(true));
+        var compiler = new CompilerJavac(new CompilerJavac.Arguments().useHostSystemClasses(true));
 
         var sources = new IdentifiedSource[arguments.inputs.size()];
 

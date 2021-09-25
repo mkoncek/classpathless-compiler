@@ -76,9 +76,19 @@ public class CompilerJavac implements ClasspathlessCompiler {
             }
 
             if (listener != null) {
-                listener.addMessage(Level.SEVERE, "Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
+                var severity = Level.SEVERE;
+                var errCode = diagnostic.getCode();
+                if (errCode != null) {
+                    if (errCode.startsWith("compiler.warn")) {
+                        severity = Level.WARNING;
+                    } else if (errCode.startsWith("compiler.note")) {
+                        severity = Level.WARNING;
+                    }
+                }
+
+                listener.addMessage(severity, "Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
                         diagnostic.getLineNumber(), diagnostic.getColumnNumber(), msg,
-                        System.lineSeparator(), diagnostic.getCode(),
+                        System.lineSeparator(), errCode,
                         (source != null ? "(" + source.getName() + ") " : " "));
             }
         }
@@ -91,7 +101,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
     }
 
     public CompilerJavac() {
-        this(new Arguments().useHostJavaClasses(true));
+        this(new Arguments().useHostSystemClasses(true));
     }
 
     public void setPostProcessor(SourcePostprocessor postprocessor) {
@@ -121,6 +131,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
         fileManager.setAvailableClasses(availableClasses);
         var loggingSwitch = new LoggingSwitch();
+        loggingSwitch.setMessagesListener(messagesListener);
         fileManager.setLoggingSwitch(loggingSwitch);
         fileManager.setArguments(arguments);
 
@@ -128,8 +139,8 @@ public class CompilerJavac implements ClasspathlessCompiler {
             sourcesChanged = false;
             var diagnosticListener = new DiagnosticToMessagesListener(messagesListener);
 
-            if (compiler.getTask(
-                    null, fileManager, diagnosticListener, null, null, compilationUnits).call()) {
+            if (compiler.getTask(null, fileManager, diagnosticListener,
+                    arguments.compilerOptions(), null, compilationUnits).call()) {
                 break;
             }
 

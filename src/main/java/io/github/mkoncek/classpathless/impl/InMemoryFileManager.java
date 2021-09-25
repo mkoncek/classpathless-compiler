@@ -119,7 +119,7 @@ public class InMemoryFileManager implements JavaFileManager {
         Iterable<Set<Location>> result;
         result = delegate.listLocationsForModules(location);
 
-        if (location.equals(StandardLocation.SYSTEM_MODULES) && !arguments.useHostJavaClasses()) {
+        if (location.equals(StandardLocation.SYSTEM_MODULES) && !arguments.useHostSystemClasses()) {
             for (var set : result) {
                 for (var loc : set) {
                     if (loc.getName().equals("SYSTEM_MODULES[java.base]")) {
@@ -257,7 +257,7 @@ public class InMemoryFileManager implements JavaFileManager {
         loggingSwitch.trace(this, "list", location, packageName, kinds, recurse);
 
         if (location.equals(StandardLocation.CLASS_PATH)
-                || (!arguments.useHostJavaClasses()
+                || (!arguments.useHostSystemClasses()
                         && location.getName().equals("SYSTEM_MODULES[java.base]"))) {
             var result = new ArrayList<JavaFileObject>();
 

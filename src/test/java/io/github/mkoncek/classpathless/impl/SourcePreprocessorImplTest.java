@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 
 public class SourcePreprocessorImplTest {
     @Test
-    public void testsanitizeImports() {
+    public void testSanitizeImports() {
         assertEquals("import com.google.gson.internal.$Gson$Preconditions;" + System.lineSeparator(),
                 SourcePreprocessorImpl.fixImports("import com.google.gson.internal..Gson.Preconditions;"));
     }

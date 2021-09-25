@@ -36,7 +36,7 @@ public class Utils {
 
             if (availableClassName.length() > packageName.length() + 1) {
                 if (availableClassName.substring(packageName.length() + 1).contains(".") && !recurse) {
-                    loggingSwitch.logln(Level.FINEST, "Skipping over class from a subpackage from ClassProvider: \"{0}\"", availableClassName);
+                    loggingSwitch.logln(Level.FINER, "Skipping over class from a subpackage from ClassProvider: \"{0}\"", availableClassName);
                     continue;
                 }
             }

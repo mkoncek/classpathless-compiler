@@ -26,8 +26,11 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.github.mkoncek.classpathless.api.MessagesListener;
+
 public class LoggingSwitch {
     PrintStream printer;
+    MessagesListener listener;
     private boolean tracing = false;
     private java.util.logging.Level logLevel = Level.OFF;
 
@@ -63,45 +66,20 @@ public class LoggingSwitch {
         var level = Level.OFF;
         var loglevel = System.getProperty("io.github.mkoncek.cplc.loglevel");
         if (loglevel != null) {
-            switch (loglevel) {
-                case "all":
-                    level = Level.ALL;
-                    break;
+            boolean validValue = false;
 
-                case "finest":
-                    level = Level.FINEST;
+            for (var innerLevel : new Level[] {
+                    Level.ALL, Level.FINEST, Level.FINER, Level.FINE, Level.CONFIG,
+                    Level.INFO, Level.WARNING, Level.SEVERE, Level.OFF}) {
+                if (innerLevel.toString().equalsIgnoreCase(loglevel)) {
+                    level = innerLevel;
+                    validValue = true;
                     break;
+                }
+            }
 
-                case "finer":
-                    level = Level.FINER;
-                    break;
-
-                case "fine":
-                    level = Level.FINE;
-                    break;
-
-                case "config":
-                    level = Level.CONFIG;
-                    break;
-
-                case "info":
-                    level = Level.INFO;
-                    break;
-
-                case "warning":
-                    level = Level.WARNING;
-                    break;
-
-                case "severe":
-                    level = Level.SEVERE;
-                    break;
-
-                case "off":
-                    level = Level.OFF;
-                    break;
-
-                default :
-                    throw new IllegalArgumentException("Unrecognized logging level: \"" + loglevel + "\"");
+            if (!validValue) {
+                throw new IllegalArgumentException("Unrecognized logging level: \"" + loglevel + "\"");
             }
         }
 
@@ -110,6 +88,10 @@ public class LoggingSwitch {
         if (System.getProperty("io.github.mkoncek.cplc.tracing") != null) {
             setTracing(true);
         }
+    }
+
+    public void setMessagesListener(MessagesListener listener) {
+        this.listener = listener;
     }
 
     public void setTracing(boolean value) {
@@ -122,7 +104,7 @@ public class LoggingSwitch {
 
     public void trace(Object struct, String name, Object... args) {
         if (tracing) {
-            logln(Level.FINEST, "[TRACE] invoking {0}::{1}({2})", struct.getClass().getName(), name,
+            logln(true, Level.FINEST, "[TRACE] invoking {0}::{1}({2})", struct.getClass().getName(), name,
                     Stream.of(args).map(arg -> arg == null ? "<null>" : arg.toString())
                     .collect(Collectors.joining(", ")));
         }
@@ -130,18 +112,35 @@ public class LoggingSwitch {
 
     public void trace(Object result) {
         if (tracing) {
-            logln(Level.FINEST, "[TRACE] returning {0}", result == null ? "<null>" : result.toString());
+            logln(true, Level.FINEST, "[TRACE] returning {0}", result == null ? "<null>" : result.toString());
         }
     }
 
-    public void log(java.util.logging.Level level, String format, Object... args) {
+    public void log(boolean traced, java.util.logging.Level level, String format, Object... args) {
+        /// TODO contact JRD
+        /*
+        if (!traced && listener != null) {
+            listener.addMessage(level, format, args);
+        }
+         */
+
+        /// TODO delete this line, this is here just to silence spotbugs
+        {
+            var ls = listener;
+            listener = null;
+        }
+
         if (logLevel != Level.OFF && level.intValue() >= logLevel.intValue()) {
-            var message = "[LOG] " + MessageFormat.format(format, args);
+            var message = "[CPLC.LOG] " + MessageFormat.format(format, args);
             printer.print(message);
         }
     }
 
+    public void logln(boolean traced, java.util.logging.Level level, String format, Object... args) {
+        log(traced, level, format + System.lineSeparator(), args);
+    }
+
     public void logln(java.util.logging.Level level, String format, Object... args) {
-        log(level, format + System.lineSeparator(), args);
+        logln(false, level, format, args);
     }
 }

@@ -15,19 +15,32 @@
  */
 package io.github.mkoncek.classpathless.api;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 public interface ClasspathlessCompiler {
     static class Arguments {
-        private boolean useHostJavaClasses = true;
+        private boolean useHostSystemClasses = true;
+        private List<String> compilerFlags = new ArrayList<>();
 
-        public boolean useHostJavaClasses() {
-            return useHostJavaClasses;
+        public boolean useHostSystemClasses() {
+            return useHostSystemClasses;
         }
 
-        public Arguments useHostJavaClasses(boolean value) {
-            useHostJavaClasses = value;
+        public List<String> compilerOptions() {
+            return Collections.unmodifiableList(compilerFlags);
+        }
+
+        public Arguments compilerOptions(Collection<String> value) {
+            compilerFlags.addAll(value);
+            return this;
+        }
+
+        public Arguments useHostSystemClasses(boolean value) {
+            useHostSystemClasses = value;
             return this;
         }
     }
