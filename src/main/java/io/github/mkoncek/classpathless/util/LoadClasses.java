@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.mkoncek.classpathless.impl;
+package io.github.mkoncek.classpathless.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,9 +22,11 @@ import java.util.SortedSet;
 import java.util.logging.Level;
 
 import io.github.mkoncek.classpathless.api.ClassesProvider;
+import io.github.mkoncek.classpathless.impl.InMemoryJavaClassFileObject;
+import io.github.mkoncek.classpathless.impl.LoggingSwitch;
 
-public class Utils {
-    static Collection<InMemoryJavaClassFileObject> loadClasses(SortedSet<String> availableClasses,
+public class LoadClasses {
+    public static Collection<InMemoryJavaClassFileObject> loadClasses(SortedSet<String> availableClasses,
             String packageName, boolean recurse, ClassesProvider classprovider,
             LoggingSwitch loggingSwitch) throws IOException {
         var result = new ArrayList<InMemoryJavaClassFileObject>();
@@ -36,7 +38,7 @@ public class Utils {
 
             if (availableClassName.length() > packageName.length() + 1) {
                 if (availableClassName.substring(packageName.length() + 1).contains(".") && !recurse) {
-                    loggingSwitch.logln(Level.FINER, "Skipping over class from a subpackage from ClassProvider: \"{0}\"", availableClassName);
+                    loggingSwitch.logln(Level.FINE, "Skipping over class from a subpackage from ClassProvider: \"{0}\"", availableClassName);
                     continue;
                 }
             }

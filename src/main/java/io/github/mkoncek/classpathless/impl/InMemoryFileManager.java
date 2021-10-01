@@ -34,6 +34,7 @@ import javax.tools.StandardLocation;
 
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.ClasspathlessCompiler;
+import io.github.mkoncek.classpathless.util.LoadClasses;
 
 /**
  * @author Marián Konček
@@ -262,7 +263,7 @@ public class InMemoryFileManager implements JavaFileManager {
             var result = new ArrayList<JavaFileObject>();
 
             if (!packageName.isEmpty()) {
-                result.addAll(Utils.loadClasses(availableClasses, packageName, recurse, classprovider, loggingSwitch));
+                result.addAll(LoadClasses.loadClasses(availableClasses, packageName, recurse, classprovider, loggingSwitch));
             }
 
             loggingSwitch.trace(result);
