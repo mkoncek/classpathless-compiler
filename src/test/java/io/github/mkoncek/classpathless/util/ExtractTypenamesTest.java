@@ -20,10 +20,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import io.github.mkoncek.classpathless.api.ClassIdentifier;
+import io.github.mkoncek.classpathless.api.ClassesProvider;
+import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.util.extract.Dummy;
 import io.github.mkoncek.classpathless.util.extract.DummyAnnotation;
 import io.github.mkoncek.classpathless.util.extract.DummyException;
@@ -160,6 +167,13 @@ public class ExtractTypenamesTest {
     }
 
     @Test
+    void testAnonymous() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/Anonymous.class")) {
+            assertTrue(ExtractTypenames.extract(is.readAllBytes()).contains("io.github.mkoncek.classpathless.util.extract.Anonymous$1"));
+        }
+    }
+
+    @Test
     void testAnnotationClass() throws IOException {
         try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/AnnotationClass.class")) {
             assertTrue(ExtractTypenames.extract(is.readAllBytes()).contains(DUMMY_ANNOTATION_NAME));
@@ -221,6 +235,67 @@ public class ExtractTypenamesTest {
     void testAnnotationTryCatch() throws IOException {
         try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/AnnotationTryCatch.class")) {
             assertTrue(ExtractTypenames.extract(is.readAllBytes()).contains(DUMMY_ANNOTATION_NAME));
+        }
+    }
+
+    private static class FSProvider implements ClassesProvider {
+        @Override
+        public Collection<IdentifiedBytecode> getClass(
+                ClassIdentifier... names) {
+            var result = new ArrayList<IdentifiedBytecode>();
+            for (var name : names) {
+                var filename = "target/test-classes/" + name.getFullName().replace('.', '/') + ".class";
+                try (var is = new FileInputStream(filename)) {
+                    result.add(new IdentifiedBytecode(name, is.readAllBytes()));
+                } catch (IOException ex) {
+                    throw new UncheckedIOException(ex);
+                }
+            }
+            return result;
+        }
+
+        @Override
+        public List<String> getClassPathListing() {
+            return null;
+        }
+    }
+
+    @Test
+    void testExtractNestedEmpty() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/Used.class")) {
+            assertTrue(ExtractTypenames.extractNested(is.readAllBytes(), new FSProvider()).isEmpty());
+        }
+    }
+
+    @Test
+    void testExtractNested() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/ExtendNestedInner.class")) {
+            var result = ExtractTypenames.extractNested(is.readAllBytes(), new FSProvider());
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.ExtendNestedInner$Inner"));
+            assertTrue(result.size() == 1);
+        }
+    }
+
+    @Test
+    void testExtractMultiNested() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/MultiNested.class")) {
+            var result = ExtractTypenames.extractNested(is.readAllBytes(), new FSProvider());
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested11"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested11$Nested111"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested11$Nested112"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211"));
+            assertTrue(result.size() == 7);
+        }
+    }
+
+    @Test
+    void testExtractNestedAnonymous() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/Anonymous.class")) {
+            assertTrue(ExtractTypenames.extractNested(is.readAllBytes(), new FSProvider()).contains(
+                    "io.github.mkoncek.classpathless.util.extract.Anonymous$1"));
         }
     }
 }

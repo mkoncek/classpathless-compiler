@@ -15,6 +15,7 @@
  */
 package io.github.mkoncek.classpathless.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -28,6 +29,10 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
+
+import io.github.mkoncek.classpathless.api.ClassIdentifier;
+import io.github.mkoncek.classpathless.api.ClassesProvider;
+import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 
 public class ExtractTypenames {
     static private final int CURRENT_ASM_OPCODE = org.objectweb.asm.Opcodes.ASM9;
@@ -72,13 +77,70 @@ public class ExtractTypenames {
     }
 
     private SortedSet<String> extractFrom(byte[] classFile) {
-        var cr = new ClassReader(classFile);
-        cr.accept(new ExtrClassVisitor(), 0);
+        new ClassReader(classFile).accept(new ExtrClassVisitor(), 0);
         return classes;
     }
 
+    private SortedSet<String> extractNestedFrom(byte[] classFile, ClassesProvider classprovider) {
+        var classFiles = new ArrayList<IdentifiedBytecode>();
+        var addedClasses = new ArrayList<ClassIdentifier>();
+
+        new ClassReader(classFile).accept(new ClassVisitor(CURRENT_ASM_OPCODE) {
+            @Override
+            public void visit(int version, int access, String name,
+                    String signature, String superName, String[] interfaces) {
+                addedClasses.add(new ClassIdentifier(name.replace('/', '.')));
+            }
+        }, 0);
+
+        var initialClass = addedClasses.get(0);
+        var visitor = new ClassVisitor(CURRENT_ASM_OPCODE) {
+            @Override
+            public void visitInnerClass(String name, String outerName,
+                    String innerName, int access) {
+                var normalized = normalize(name);
+                if (normalized.startsWith(initialClass.getFullName())
+                        && normalized.length() > initialClass.getFullName().length()
+                        && !classes.contains(normalized)) {
+                    addedClasses.add(new ClassIdentifier(normalized));
+                }
+            }
+        };
+
+        do {
+            for (var file : classFiles) {
+                new ClassReader(file.getFile()).accept(visitor, 0);
+            }
+            classFiles.clear();
+            classFiles.addAll(classprovider.getClass(addedClasses.toArray(new ClassIdentifier[0])));
+            for (var added : addedClasses) {
+                classes.add(added.getFullName());
+            }
+            addedClasses.clear();
+        } while (!classFiles.isEmpty());
+
+        classes.remove(initialClass.getFullName());
+        return classes;
+    }
+
+    /**
+     * Extracts all type names present in the .class file.
+     * @param classFile The file to extract names from.
+     * @return The set of fully qualified type names present in the class file.
+     */
     public static SortedSet<String> extract(byte[] classFile) {
         return new ExtractTypenames().extractFrom(classFile);
+    }
+
+    /**
+     * Recursively extracts all the nested class names from the initial outer
+     * class possibly by pulling more class files from the class provider.
+     * @param classFile The file to extract names from.
+     * @param classprovider The provider of nested classes' bytecode.
+     * @return The set of all nested fully qualified class names excluding the initial outer class.
+     */
+    public static SortedSet<String> extractNested(byte[] classFile, ClassesProvider classprovider) {
+        return new ExtractTypenames().extractNestedFrom(classFile, classprovider);
     }
 
     private class ExtrAnnotationVisitor extends AnnotationVisitor {
