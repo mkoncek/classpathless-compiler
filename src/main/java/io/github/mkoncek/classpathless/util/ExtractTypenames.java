@@ -45,6 +45,7 @@ public class ExtractTypenames {
      * @return
      */
     private static String normalize(String value) {
+        assert(!value.startsWith("("));
         int begin = 0;
         while (begin < value.length() && value.charAt(begin) == '[') {
             ++begin;
@@ -57,7 +58,7 @@ public class ExtractTypenames {
     }
 
     /**
-     * Signatures may contain format type parameters, for example:
+     * Signatures may contain type parameters, for example:
      * "Ljava/util/function/Consumer<LType;>;", this function extracts both
      * outer and inner types.
      * @param signature
@@ -241,9 +242,9 @@ public class ExtractTypenames {
         public void visitMethodInsn(int opcode, String owner,
                 String name, String descriptor, boolean isInterface) {
             classes.add(normalize(owner));
-            classes.add(normalize(Type.getType(descriptor).getReturnType().getClassName()));
+            classes.add(normalize(Type.getType(descriptor).getReturnType().getInternalName()));
             for (var t : Type.getType(descriptor).getArgumentTypes()) {
-                classes.add(normalize(t.getClassName()));
+                classes.add(normalize(t.getInternalName()));
             }
         }
 
@@ -251,9 +252,9 @@ public class ExtractTypenames {
         public void visitInvokeDynamicInsn(String name,
                 String descriptor, Handle bootstrapMethodHandle,
                 Object... bootstrapMethodArguments) {
-            classes.add(normalize(Type.getType(descriptor).getReturnType().getClassName()));
+            classes.add(normalize(Type.getType(descriptor).getReturnType().getInternalName()));
             for (var t : Type.getType(descriptor).getArgumentTypes()) {
-                classes.add(normalize(t.getClassName()));
+                classes.add(normalize(t.getInternalName()));
             }
         }
 
@@ -297,9 +298,9 @@ public class ExtractTypenames {
         @Override
         public MethodVisitor visitMethod(int access, String name,
                 String descriptor, String signature, String[] exceptions) {
-            classes.add(normalize(Type.getType(descriptor).getReturnType().getClassName()));
+            classes.add(normalize(Type.getType(descriptor).getReturnType().getInternalName()));
             for (var t : Type.getType(descriptor).getArgumentTypes()) {
-                classes.add(normalize(t.getClassName()));
+                classes.add(normalize(t.getInternalName()));
             }
             if (signature != null) {
                 extractSignature(signature, classes);

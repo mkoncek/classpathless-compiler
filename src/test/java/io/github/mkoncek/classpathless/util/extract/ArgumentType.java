@@ -16,6 +16,6 @@
 package io.github.mkoncek.classpathless.util.extract;
 
 public class ArgumentType {
-    public void useDummy(Dummy dummy) {
+    public void useDummy(Dummy dummy, int i, int j) {
     }
 }

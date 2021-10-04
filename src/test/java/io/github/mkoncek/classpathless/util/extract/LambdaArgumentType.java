@@ -15,10 +15,10 @@
  */
 package io.github.mkoncek.classpathless.util.extract;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class LambdaArgumentType {
     public static void main(String[] args) {
-        Consumer<Dummy> consumer = (Dummy d) -> {};
+        BiConsumer<Dummy, DummyInterface> consumer = (Dummy d, DummyInterface i) -> {};
     }
 }
