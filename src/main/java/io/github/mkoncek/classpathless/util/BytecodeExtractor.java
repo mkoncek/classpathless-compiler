@@ -35,7 +35,11 @@ import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 
-public class Bytecode {
+/**
+ * A utility class to extract useful information fomr class files like typenames
+ * methods, fields.
+ */
+public class BytecodeExtractor {
     static private final int CURRENT_ASM_OPCODE = org.objectweb.asm.Opcodes.ASM9;
 
     private SortedSet<String> classes = new TreeSet<>();
@@ -135,7 +139,7 @@ public class Bytecode {
      * @return The set of fully qualified type names present in the class file.
      */
     public static SortedSet<String> extractTypenames(byte[] classFile) {
-        return new Bytecode().extractTypenamesFrom(classFile);
+        return new BytecodeExtractor().extractTypenamesFrom(classFile);
     }
 
     /**
@@ -222,7 +226,7 @@ public class Bytecode {
      * @return The set of all nested fully qualified class names excluding the initial outer class.
      */
     public static SortedSet<String> extractNestedClasses(byte[] classFile, ClassesProvider classprovider) {
-        return new Bytecode().extractNestedClassesFrom(classFile, classprovider);
+        return new BytecodeExtractor().extractNestedClassesFrom(classFile, classprovider);
     }
 
     private class ExtrAnnotationVisitor extends AnnotationVisitor {
