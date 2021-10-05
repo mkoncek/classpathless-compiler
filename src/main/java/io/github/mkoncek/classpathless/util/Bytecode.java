@@ -17,6 +17,7 @@ package io.github.mkoncek.classpathless.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -34,7 +35,7 @@ import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 
-public class ExtractTypenames {
+public class Bytecode {
     static private final int CURRENT_ASM_OPCODE = org.objectweb.asm.Opcodes.ASM9;
 
     private SortedSet<String> classes = new TreeSet<>();
@@ -61,8 +62,6 @@ public class ExtractTypenames {
      * Signatures may contain type parameters, for example:
      * "Ljava/util/function/Consumer<LType;>;", this function extracts both
      * outer and inner types.
-     * @param signature
-     * @param result
      */
     private static void extractSignature(String signature, Collection<String> result) {
         signature = normalize(signature);
@@ -77,12 +76,12 @@ public class ExtractTypenames {
         result.add(signature.substring(0, begin));
     }
 
-    private SortedSet<String> extractFrom(byte[] classFile) {
+    private SortedSet<String> extractTypenamesFrom(byte[] classFile) {
         new ClassReader(classFile).accept(new ExtrClassVisitor(), 0);
         return classes;
     }
 
-    private SortedSet<String> extractNestedFrom(byte[] classFile, ClassesProvider classprovider) {
+    private SortedSet<String> extractNestedClassesFrom(byte[] classFile, ClassesProvider classprovider) {
         var classFiles = new ArrayList<IdentifiedBytecode>();
         var addedClasses = new ArrayList<ClassIdentifier>();
 
@@ -129,8 +128,84 @@ public class ExtractTypenames {
      * @param classFile The file to extract names from.
      * @return The set of fully qualified type names present in the class file.
      */
-    public static SortedSet<String> extract(byte[] classFile) {
-        return new ExtractTypenames().extractFrom(classFile);
+    public static SortedSet<String> extractTypenames(byte[] classFile) {
+        return new Bytecode().extractTypenamesFrom(classFile);
+    }
+
+    /**
+     * Extracts all the field names of the provided class excluding inherited fields.
+     * @param classFile The file to extract names from.
+     * @return The collection of field names.
+     */
+    public static Collection<String> extractFields(byte[] classFile) {
+        var result = new ArrayList<String>();
+        new ClassReader(classFile).accept(new ClassVisitor(CURRENT_ASM_OPCODE) {
+            @Override
+            public FieldVisitor visitField(int access, String name,
+                    String descriptor, String signature, Object value) {
+                result.add(name);
+                return null;
+            }
+        }, 0);
+        return result;
+    }
+
+    /**
+     * Extracts all method names of given class. This will not include methods
+     * of inner classes nor inherited methods (unless they are overriden).
+     * @param classFile The file to extract names from.
+     * @return The collection of method names.
+     */
+    public static Collection<String> extractMethods(byte[] classFile) {
+        var result = new ArrayList<String>();
+        new ClassReader(classFile).accept(new ClassVisitor(CURRENT_ASM_OPCODE) {
+            @Override
+            public MethodVisitor visitMethod(int access, String name,
+                    String descriptor, String signature, String[] exceptions) {
+                result.add(name);
+                return null;
+            }
+        }, 0);
+        return result;
+    }
+
+    /**
+     * Extracts the names of all directly implemented interfaces, i. e. not transitively.
+     * @param classFile The file to extract names from.
+     * @return The collection of implemented interfaces.
+     */
+    public static Collection<String> extractInterfaces(byte[] classFile) {
+        var result = new ArrayList<String>();
+        new ClassReader(classFile).accept(new ClassVisitor(CURRENT_ASM_OPCODE) {
+            @Override
+            public void visit(int version, int access, String name,
+                    String signature, String superName, String[] interfaces) {
+                for (var iName : interfaces) {
+                    result.add(iName.replace('/', '.'));
+                }
+            }
+        }, 0);
+        return result;
+    }
+
+    /**
+     * Extracts the name of the super class of the provided class. Classes which
+     * to not inherit this will be equal to "java.lang.Object".
+     * @param classFile The file to extract the name from.
+     * @return The name of the super class.
+     */
+    public static Optional<String> extractSuperClass(byte[] classFile) {
+        var result = new String[1];
+        new ClassReader(classFile).accept(new ClassVisitor(CURRENT_ASM_OPCODE) {
+            @Override
+            public void visit(int version, int access, String name,
+                    String signature, String superName, String[] interfaces) {
+                if (superName != null) {
+                    result[0] = superName.replace('/', '.');
+                }
+            }
+        }, 0);
+        return Optional.ofNullable(result[0]);
     }
 
     /**
@@ -140,8 +215,8 @@ public class ExtractTypenames {
      * @param classprovider The provider of nested classes' bytecode.
      * @return The set of all nested fully qualified class names excluding the initial outer class.
      */
-    public static SortedSet<String> extractNested(byte[] classFile, ClassesProvider classprovider) {
-        return new ExtractTypenames().extractNestedFrom(classFile, classprovider);
+    public static SortedSet<String> extractNestedClasses(byte[] classFile, ClassesProvider classprovider) {
+        return new Bytecode().extractNestedClassesFrom(classFile, classprovider);
     }
 
     private class ExtrAnnotationVisitor extends AnnotationVisitor {
