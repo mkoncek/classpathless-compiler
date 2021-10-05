@@ -312,6 +312,10 @@ public class BytecodeTest {
                 ClassIdentifier... names) {
             var result = new ArrayList<IdentifiedBytecode>();
             for (var name : names) {
+                // This is to ensure that we are not requesting the outer class
+                // bytecode again
+                assertTrue(name.getFullName().contains("$"));
+
                 var filename = "target/test-classes/" + name.getFullName().replace('.', '/') + ".class";
                 try (var is = new FileInputStream(filename)) {
                     result.add(new IdentifiedBytecode(name, is.readAllBytes()));

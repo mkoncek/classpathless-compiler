@@ -85,6 +85,7 @@ public class Bytecode {
         var classFiles = new ArrayList<IdentifiedBytecode>();
         var addedClasses = new ArrayList<ClassIdentifier>();
 
+        // Extract the name of outer class
         new ClassReader(classFile).accept(new ClassVisitor(CURRENT_ASM_OPCODE) {
             @Override
             public void visit(int version, int access, String name,
@@ -94,6 +95,8 @@ public class Bytecode {
         }, 0);
 
         var initialClass = addedClasses.get(0);
+        addedClasses.clear();
+
         var visitor = new ClassVisitor(CURRENT_ASM_OPCODE) {
             @Override
             public void visitInnerClass(String name, String outerName,
@@ -107,19 +110,22 @@ public class Bytecode {
             }
         };
 
-        do {
-            for (var file : classFiles) {
-                new ClassReader(file.getFile()).accept(visitor, 0);
-            }
-            classFiles.clear();
+        new ClassReader(classFile).accept(visitor, 0);
+
+        while (!addedClasses.isEmpty()) {
             classFiles.addAll(classprovider.getClass(addedClasses.toArray(new ClassIdentifier[0])));
+
             for (var added : addedClasses) {
                 classes.add(added.getFullName());
             }
             addedClasses.clear();
-        } while (!classFiles.isEmpty());
 
-        classes.remove(initialClass.getFullName());
+            for (var file : classFiles) {
+                new ClassReader(file.getFile()).accept(visitor, 0);
+            }
+            classFiles.clear();
+        }
+
         return classes;
     }
 
