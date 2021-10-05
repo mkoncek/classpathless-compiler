@@ -18,11 +18,11 @@ package io.github.mkoncek.classpathless.impl;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -41,6 +41,7 @@ import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 import io.github.mkoncek.classpathless.api.SourcePostprocessor;
+import io.github.mkoncek.classpathless.util.BytecodeExtractor;
 
 /**
  * An implementation using javax.tools compiler API
@@ -112,26 +113,52 @@ public class CompilerJavac implements ClasspathlessCompiler {
         this.postprocessor = postprocessor;
     }
 
+    private static void transitiveImport(IdentifiedBytecode bytecode, ClassesProvider classprovider, Set<String> result) {
+        result.add(bytecode.getClassIdentifier().getFullName());
+        for (var typename : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
+            if (result.add(typename)) {
+                int nestedPos = typename.indexOf('$');
+                if (nestedPos != -1 && nestedPos + 1 < typename.length()) {
+                    typename = typename.substring(0, nestedPos);
+                    if (result.add(typename)) {
+                        for (var outerBytecode : classprovider.getClass(new ClassIdentifier(typename))) {
+                            result.addAll(BytecodeExtractor.extractNestedClasses(outerBytecode.getFile(), classprovider));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     public Collection<IdentifiedBytecode> compileClass(
             ClassesProvider classprovider,
             Optional<MessagesListener> messagesConsumer,
             IdentifiedSource... javaSourceFiles) {
-        Collection<InMemoryJavaSourceFileObject> compilationUnits = new ArrayList<>();
+        var messagesListener = messagesConsumer.orElse(new NullMessagesListener());
+        var loggingSwitch = new LoggingSwitch();
+        loggingSwitch.setMessagesListener(messagesListener);
 
-        for (var source : Arrays.asList(javaSourceFiles)) {
+        Collection<InMemoryJavaSourceFileObject> compilationUnits = new ArrayList<>();
+        var availableClasses = new TreeSet<String>();
+
+        for (var source : javaSourceFiles) {
             compilationUnits.add(new InMemoryJavaSourceFileObject(source));
+            for (var bytecode : classprovider.getClass(source.getClassIdentifier())) {
+                transitiveImport(bytecode, classprovider, availableClasses);
+                for (var nestedClass : BytecodeExtractor.extractNestedClasses(bytecode.getFile(), classprovider)) {
+                    for (var nestedBytecode : classprovider.getClass(new ClassIdentifier(nestedClass))) {
+                        transitiveImport(nestedBytecode, classprovider, availableClasses);
+                    }
+                }
+            }
         }
 
-        var messagesListener = messagesConsumer.orElse(new NullMessagesListener());
+        loggingSwitch.logln(Level.INFO, "Found typenames in the bytecode: {0}", availableClasses);
 
         fileManager.setClassProvider(classprovider);
 
-        var availableClasses = new TreeSet<>(classprovider.getClassPathListing());
-
         fileManager.setAvailableClasses(availableClasses);
-        var loggingSwitch = new LoggingSwitch();
-        loggingSwitch.setMessagesListener(messagesListener);
         fileManager.setLoggingSwitch(loggingSwitch);
         fileManager.setArguments(arguments);
 

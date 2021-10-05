@@ -78,7 +78,7 @@ public class ClasspathClassesProvider implements ClassesProvider {
     /**
      *
      * @param classpath
-     * @return A list of strings representing the roots and /* expanded to jar files
+     * @return Dummy list of strings representing the roots and /* expanded to jar files
      */
     static List<String> obtainClasspath(String classpath) {
         /// https://docs.oracle.com/javase/8/docs/technotes/tools/windows/classpath.html

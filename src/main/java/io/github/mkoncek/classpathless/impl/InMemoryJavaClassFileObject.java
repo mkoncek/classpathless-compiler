@@ -75,7 +75,7 @@ public class InMemoryJavaClassFileObject extends IdentifiedJavaFileObject {
                 byteStream.write(bytecodes.iterator().next().getFile());
                 classProvider = null;
             } else if (bytecodes.size() == 0) {
-                loggingSwitch.logln(Level.FINEST, "Bytecode for {0} not found", this);
+                loggingSwitch.logln(Level.FINEST, "BytecodeExtractor for {0} not found", this);
             } else {
                 throw new IllegalStateException();
             }

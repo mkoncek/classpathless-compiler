@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.regex.Pattern;
 
 /**
- * A simple class to extract information from an <code>InputStream</code>
+ * Dummy simple class to extract information from an <code>InputStream</code>
  * representing a Java source file.
  *
  * Reads by lines removing comments until the first "{" symbol (start

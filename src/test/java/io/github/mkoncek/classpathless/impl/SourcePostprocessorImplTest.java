@@ -71,8 +71,14 @@ public class SourcePostprocessorImplTest {
 
         javac.compile(abstractFile);
 
-        var classes = new ArrayList<IdentifiedBytecode>(2);
+        var classes = new ArrayList<IdentifiedBytecode>();
 
+        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/postprocessor/DerivedClass.class")) {
+            classes.add(new IdentifiedBytecode(new ClassIdentifier("postprocessor.DerivedClass"), is.readAllBytes()));
+        }
+        try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/postprocessor/DerivedClass$DerivedNestedClass.class")) {
+            classes.add(new IdentifiedBytecode(new ClassIdentifier("postprocessor.DerivedClass$DerivedNestedClass"), is.readAllBytes()));
+        }
         try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/postprocessor/AbstractBase.class")) {
             classes.add(new IdentifiedBytecode(new ClassIdentifier("postprocessor.AbstractBase"), is.readAllBytes()));
         }

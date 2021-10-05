@@ -20,10 +20,10 @@ import java.util.List;
 
 public interface ClassesProvider {
     /**
-     * Callback for compiler, which provides, on demand, the dependencies compiler is missing.
+     * Callback for compiler, which provides, on demand, the dependencies the compiler is missing.
      *
-     * @param names names of classes the provider should return
-     * @return bytecode of all found classes
+     * @param names Names of classes the provider should return
+     * @return The bytecode of all found classes
      */
     Collection<IdentifiedBytecode> getClass(ClassIdentifier... names);
 

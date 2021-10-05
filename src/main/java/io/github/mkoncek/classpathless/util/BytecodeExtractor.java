@@ -371,6 +371,18 @@ public class BytecodeExtractor {
         }
 
         @Override
+        public void visit(int version, int access, String name,
+                String signature, String superName, String[] interfaces) {
+            classes.add(name.replace('/', '.'));
+            if (superName != null) {
+                classes.add(superName.replace('/', '.'));
+            }
+            for (var iName : interfaces) {
+                classes.add(iName.replace('/', '.'));
+            }
+        }
+
+        @Override
         public FieldVisitor visitField(int access, String name,
                 String descriptor, String signature, Object value) {
             classes.add(normalize(descriptor));
