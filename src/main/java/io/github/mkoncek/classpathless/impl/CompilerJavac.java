@@ -142,6 +142,10 @@ public class CompilerJavac implements ClasspathlessCompiler {
         Collection<InMemoryJavaSourceFileObject> compilationUnits = new ArrayList<>();
         var availableClasses = new TreeSet<String>();
 
+        // Workaround to expose this annotation even though it only has SOURCE
+        // retention. The decompilers use it anyway.
+        availableClasses.add("java.lang.Override");
+
         for (var source : javaSourceFiles) {
             compilationUnits.add(new InMemoryJavaSourceFileObject(source));
             for (var bytecode : classprovider.getClass(source.getClassIdentifier())) {
@@ -156,8 +160,11 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
         loggingSwitch.logln(Level.INFO, "Found typenames in the bytecode: {0}", availableClasses);
 
-        fileManager.setClassProvider(classprovider);
+        availableClasses.addAll(classprovider.getClassPathListing());
 
+        loggingSwitch.logln(Level.INFO, "All available typenames: {0}", availableClasses);
+
+        fileManager.setClassProvider(classprovider);
         fileManager.setAvailableClasses(availableClasses);
         fileManager.setLoggingSwitch(loggingSwitch);
         fileManager.setArguments(arguments);
