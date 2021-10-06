@@ -31,10 +31,7 @@ public interface ClassesProvider {
      * Warning: may include lambdas and will include inner classes with $notations.
      * Intentionally not using ClassIdentifier, but may change to it
      *
-     * @deprecated This function should be replaced by more intelligent class
-     * file scanning and requesting only needed classes.
      * @return all fully qualified classes visible from classpath
      */
-    @Deprecated
     List<String> getClassPathListing();
 }
