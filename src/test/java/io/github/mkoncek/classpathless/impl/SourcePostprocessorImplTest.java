@@ -71,18 +71,6 @@ public class SourcePostprocessorImplTest {
 
         javac.compile(abstractFile);
 
-        var derivedFiles = new String[] {
-                "src/test/resources/io/github/mkoncek/classpathless/impl/postprocessor/DerivedClass.class",
-                "src/test/resources/io/github/mkoncek/classpathless/impl/postprocessor/DerivedClass$DerivedNestedClass.class",
-        };
-
-        for (var file : derivedFiles) {
-            Files.deleteIfExists(Paths.get(file));
-        }
-
-        javac.compile(abstractFile,
-                "src/test/resources/io/github/mkoncek/classpathless/impl/postprocessor/DerivedClass.java");
-
         var classes = new ArrayList<IdentifiedBytecode>();
 
         try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/postprocessor/DerivedClass.class")) {
@@ -109,6 +97,18 @@ public class SourcePostprocessorImplTest {
         }
 
         var cplcResult = cplc.compileClass(provider, Optional.of(new NullMessagesListener()), source);
+
+        var derivedFiles = new String[] {
+                "src/test/resources/io/github/mkoncek/classpathless/impl/postprocessor/DerivedClass.class",
+                "src/test/resources/io/github/mkoncek/classpathless/impl/postprocessor/DerivedClass$DerivedNestedClass.class",
+        };
+
+        for (var file : derivedFiles) {
+            Files.deleteIfExists(Paths.get(file));
+        }
+
+        javac.compile(abstractFile,
+                "src/test/resources/io/github/mkoncek/classpathless/impl/postprocessor/DerivedClass.java");
 
         for (var bytecode : cplcResult) {
             var name = bytecode.getClassIdentifier().getFullName();
