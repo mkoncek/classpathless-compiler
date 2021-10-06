@@ -170,6 +170,15 @@ public class BytecodeExtractorTest {
     }
 
     @Test
+    void testThrowsDeclaration() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/Dummy.class")) {
+            var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
+            genericCheck(result);
+            assertTrue(result.contains(DummyException.class.getName()));
+        }
+    }
+
+    @Test
     void testTryCatch() throws IOException {
         try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/TryCatch.class")) {
             var result = BytecodeExtractor.extractTypenames(is.readAllBytes());

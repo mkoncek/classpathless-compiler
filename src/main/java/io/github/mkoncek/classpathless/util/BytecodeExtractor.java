@@ -402,6 +402,11 @@ public class BytecodeExtractor {
             if (signature != null) {
                 extractSignature(signature, classes);
             }
+            if (exceptions != null) {
+                for (var ex : exceptions) {
+                    classes.add(ex.replace('/', '.'));
+                }
+            }
             return new ExtrMethodVisitor();
         }
 
