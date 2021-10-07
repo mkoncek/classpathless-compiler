@@ -46,14 +46,14 @@ public class SourcePostprocessorImplTest {
         source = SourcePostprocessorImpl.makeAbstract(source, 4, 12);
         source = SourcePostprocessorImpl.makeAbstract(source, 3, 8);
 
-        assertEquals(""
+        assertEquals((""
                 + "package postprocessor;\n"
                 + "\n"
                 + "public abstract class DerivedClass extends AbstractBase {\n"
                 + "    static abstract class DerivedNestedClass extends AbstractBase.AbstractNestedBase {\n"
                 + "    }\n"
                 + "}\n"
-                + "", source);
+                + "").replace("\n", System.lineSeparator()), source);
     }
 
     @Test
