@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -51,6 +52,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
     private InMemoryFileManager fileManager;
     private Arguments arguments;
     private SourcePostprocessor postprocessor = new SourcePostprocessor.Null();
+    private final Pattern LAMBDA_MATCHER = Pattern.compile("^.*\\$\\$Lambda\\$[\\d]+/0x[0-9a-f]+$");
 
     private static ClassIdentifier getIdentifier(JavaFileObject object) {
         /// Remove the leading "/"
@@ -160,7 +162,20 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
         loggingSwitch.logln(Level.INFO, "Found typenames in the bytecode: {0}", availableClasses);
 
-        availableClasses.addAll(classprovider.getClassPathListing());
+        for (var additionalClass : classprovider.getClassPathListing()) {
+            if (additionalClass.charAt(0) == '[') {
+                loggingSwitch.logln(Level.FINE, "Ignoring class from classpath listing: {0}", additionalClass);
+                continue;
+            }
+
+            var matcher = LAMBDA_MATCHER.matcher(additionalClass);
+            if (matcher.matches()) {
+                loggingSwitch.logln(Level.FINE, "Ignoring lambda class from classpath listing: {0}", additionalClass);
+                continue;
+            }
+
+            availableClasses.add(additionalClass);
+        }
 
         loggingSwitch.logln(Level.INFO, "All available typenames: {0}", availableClasses);
 
