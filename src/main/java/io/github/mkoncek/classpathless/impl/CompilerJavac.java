@@ -61,7 +61,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
         return new ClassIdentifier(object.getName().substring(1));
     }
 
-    static private class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
+    private static class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
         MessagesListener listener;
         Map<ClassIdentifier, Collection<CompilationError>> compilationErrors;
 
@@ -77,7 +77,8 @@ public class CompilerJavac implements ClasspathlessCompiler {
             var source = diagnostic.getSource();
             if (source != null) {
                 compilationErrors.computeIfAbsent(getIdentifier(source), k -> new ArrayList<>())
-                .add(new CompilationError(diagnostic.getLineNumber(), diagnostic.getColumnNumber(), diagnostic.getCode()));
+                .add(new CompilationError(diagnostic.getLineNumber(), diagnostic.getColumnNumber(),
+                        diagnostic.getCode(), diagnostic.getMessage(null)));
             }
 
             if (listener != null) {
@@ -192,6 +193,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
             }
 
             messagesListener.addMessage(Level.SEVERE, "Compilation failed");
+
             for (var entry : diagnosticListener.compilationErrors.entrySet()) {
                 for (var cu : compilationUnits) {
                     if (entry.getKey().equals(cu.getClassIdentifier())) {

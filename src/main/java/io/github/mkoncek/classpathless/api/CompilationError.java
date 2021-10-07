@@ -19,10 +19,12 @@ public class CompilationError {
     public final long lineNum;
     public final long columnNum;
     public final String errorCode;
+    public final String message;
 
-    public CompilationError(long lineNum, long columnNum, String errorCode) {
+    public CompilationError(long lineNum, long columnNum, String errorCode, String message) {
         this.lineNum = lineNum;
         this.columnNum = columnNum;
         this.errorCode = errorCode;
+        this.message = message;
     }
 }
