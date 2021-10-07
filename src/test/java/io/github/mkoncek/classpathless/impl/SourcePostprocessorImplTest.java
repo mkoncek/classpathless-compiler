@@ -81,7 +81,7 @@ public class SourcePostprocessorImplTest {
         }
 
         var cplc = new CompilerJavac(new CompilerJavac.Arguments().useHostSystemClasses(true));
-        cplc.setPostProcessor(new AddAbstract());
+        cplc.addPostProcessor(new AddAbstract());
 
         var provider = new SimpleClassesProvider(classes);
 

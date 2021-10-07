@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -28,6 +29,7 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nonnull;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
@@ -51,7 +53,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
     private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     private InMemoryFileManager fileManager;
     private Arguments arguments;
-    private SourcePostprocessor postprocessor = new SourcePostprocessor.Null();
+    private List<SourcePostprocessor> postprocessors = new ArrayList<>();
     private final Pattern LAMBDA_MATCHER = Pattern.compile("^.*\\$\\$Lambda\\$[\\d]+/0x[0-9a-f]+$");
 
     private static ClassIdentifier getIdentifier(JavaFileObject object) {
@@ -107,12 +109,8 @@ public class CompilerJavac implements ClasspathlessCompiler {
         this(new Arguments().useHostSystemClasses(true));
     }
 
-    public void setPostProcessor(SourcePostprocessor postprocessor) {
-        if (postprocessor == null) {
-            postprocessor = new SourcePostprocessor.Null();
-        }
-
-        this.postprocessor = postprocessor;
+    public void addPostProcessor(@Nonnull SourcePostprocessor postprocessor) {
+        postprocessors.add(postprocessor);
     }
 
     private static void transitiveImport(IdentifiedBytecode bytecode, ClassesProvider classprovider, Set<String> result) {
@@ -197,11 +195,13 @@ public class CompilerJavac implements ClasspathlessCompiler {
             for (var entry : diagnosticListener.compilationErrors.entrySet()) {
                 for (var cu : compilationUnits) {
                     if (entry.getKey().equals(cu.getClassIdentifier())) {
-                        var result = postprocessor.postprocess(cu.getIdentifiedSource(), entry.getValue());
-                        if (result.changed) {
-                            sourcesChanged = true;
-                            messagesListener.addMessage(Level.INFO, "SourcePostprocessor: reloading the source code of {0}", cu.getClassIdentifier().getFullName());
-                            cu.setSource(result.source.getSourceCode());
+                        for (var postprocessor : postprocessors) {
+                            var result = postprocessor.postprocess(cu.getIdentifiedSource(), entry.getValue());
+                            if (result.changed) {
+                                sourcesChanged = true;
+                                messagesListener.addMessage(Level.INFO, "SourcePostprocessor: reloading the source code of {0}", cu.getClassIdentifier().getFullName());
+                                cu.setSource(result.source.getSourceCode());
+                            }
                         }
                     }
                 }
