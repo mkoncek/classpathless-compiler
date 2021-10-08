@@ -11,8 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container: quay.io/mizdebsk/maven:latest
+    runs-on: [ubuntu-latest, windows-latest]
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 11
