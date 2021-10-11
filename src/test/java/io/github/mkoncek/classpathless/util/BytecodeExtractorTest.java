@@ -198,6 +198,15 @@ public class BytecodeExtractorTest {
     }
 
     @Test
+    void testForDeclaration() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/ForDeclaration.class")) {
+            var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
+            genericCheck(result);
+            assertTrue(result.contains(DUMMY_NAME));
+        }
+    }
+
+    @Test
     void testNested() throws IOException {
         try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/DummyNested.class")) {
             var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
