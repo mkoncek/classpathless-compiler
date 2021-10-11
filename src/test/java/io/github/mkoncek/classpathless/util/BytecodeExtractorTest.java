@@ -34,6 +34,7 @@ import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.util.extract.Dummy;
 import io.github.mkoncek.classpathless.util.extract.DummyAnnotation;
+import io.github.mkoncek.classpathless.util.extract.DummyCloseable;
 import io.github.mkoncek.classpathless.util.extract.DummyException;
 import io.github.mkoncek.classpathless.util.extract.DummyInheritedInterface;
 import io.github.mkoncek.classpathless.util.extract.DummyInterface;
@@ -184,6 +185,15 @@ public class BytecodeExtractorTest {
             var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
             genericCheck(result);
             assertTrue(result.contains(DummyException.class.getName()));
+        }
+    }
+
+    @Test
+    void testTryResources() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/TryResources.class")) {
+            var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
+            genericCheck(result);
+            assertTrue(result.contains(DummyCloseable.class.getName()));
         }
     }
 
