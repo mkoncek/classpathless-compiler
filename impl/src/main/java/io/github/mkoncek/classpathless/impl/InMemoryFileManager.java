@@ -34,7 +34,7 @@ import javax.tools.StandardLocation;
 
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.ClasspathlessCompiler;
-import io.github.mkoncek.classpathless.util.LoadClasses;
+import io.github.mkoncek.classpathless.impl.LoadClasses;
 
 /**
  * @author Marián Konček

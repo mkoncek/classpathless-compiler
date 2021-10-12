@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.mkoncek.classpathless.util;
+package io.github.mkoncek.classpathless.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
