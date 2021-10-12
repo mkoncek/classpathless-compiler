@@ -43,15 +43,15 @@
       <id>mkoncek</id>
       <name>Marian Koncek</name>
       <email>mkoncek@redhat.com</email>
-      <organization>Redhat</organization>
-      <organizationUrl>http://www.redhat.com</organizationUrl>
+      <organization>Red Hat</organization>
+      <organizationUrl>https://www.redhat.com</organizationUrl>
     </developer>
     <developer>
       <id>judovana</id>
       <name>Jiri Vanek</name>
       <email>jvanek@redhat.com</email>
-      <organization>Redhat</organization>
-      <organizationUrl>http://www.redhat.com</organizationUrl>
+      <organization>Red Hat</organization>
+      <organizationUrl>https://www.redhat.com</organizationUrl>
     </developer>
   </developers>
 
