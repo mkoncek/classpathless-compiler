@@ -4,11 +4,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.github.mkoncek</groupId>
-  <artifactId>classpathless-compiler</artifactId>
-  <version>1.7-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <artifactId>classpathless-compiler-parent</artifactId>
+  <version>1.0</version>
+  <packaging>pom</packaging>
 
-  <name>Classpathless Compiler</name>
+  <name>Classpathless Compiler Parent POM</name>
   <description>Java classpathless compiler</description>
   <url>https://github.com/mkoncek/classpathless-compiler/</url>
 
@@ -43,37 +43,31 @@
       <id>mkoncek</id>
       <name>Marian Koncek</name>
       <email>mkoncek@redhat.com</email>
-      <organization>Redhat</organization>
-      <organizationUrl>http://www.redhat.com</organizationUrl>
+      <organization>Red Hat</organization>
+      <organizationUrl>https://www.redhat.com</organizationUrl>
     </developer>
     <developer>
       <id>judovana</id>
       <name>Jiri Vanek</name>
       <email>jvanek@redhat.com</email>
-      <organization>Redhat</organization>
-      <organizationUrl>http://www.redhat.com</organizationUrl>
+      <organization>Red Hat</organization>
+      <organizationUrl>https://www.redhat.com</organizationUrl>
     </developer>
   </developers>
 
+  <modules>
+    <module>api</module>
+    <module>impl</module>
+    <module>util</module>
+  </modules>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-    <cplc.main.class>io.github.mkoncek.classpathless.Tool</cplc.main.class>
+    <maven.compiler.release.impl>11</maven.compiler.release.impl>
     <spotbugs.version>4.2.3</spotbugs.version>
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>com.beust</groupId>
-      <artifactId>jcommander</artifactId>
-      <version>1.78</version>
-    </dependency>
-    <dependency>
-      <groupId>org.ow2.asm</groupId>
-      <artifactId>asm-tree</artifactId>
-      <version>9.2</version>
-    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
@@ -145,31 +139,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.0.2</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.6</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <attach>false</attach>
-              <descriptorRefs>
-                <descriptorRef>jar-with-dependencies</descriptorRef>
-              </descriptorRefs>
-              <archive>
-                <manifest>
-                  <addClasspath>true</addClasspath>
-                  <mainClass>${cplc.main.class}</mainClass>
-                </manifest>
-              </archive>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-install-plugin</artifactId>
