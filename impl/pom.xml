@@ -11,7 +11,7 @@
   </parent>
 
   <artifactId>classpathless-compiler</artifactId>
-  <version>1.7-SNAPSHOT</version>
+  <version>1.7</version>
 
   <name>Classpathless Compiler Implementation</name>
 
