@@ -47,7 +47,11 @@ public class BytecodeExtractorTest {
     private static void genericCheck(Collection<String> types) {
         for (var type : types) {
             assertNotEquals("void", type);
-            assertFalse(type.endsWith("[]"));
+            assertFalse(type.contains("[]"), type);
+            assertFalse(type.contains(">"), type);
+            assertFalse(type.contains(";"), type);
+            assertFalse(type.contains("()"), type);
+            assertFalse(type.startsWith("Ljava."), type);
         }
     }
 

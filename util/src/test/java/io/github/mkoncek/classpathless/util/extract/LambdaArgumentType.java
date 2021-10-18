@@ -19,6 +19,6 @@ import java.util.function.BiConsumer;
 
 public class LambdaArgumentType {
     public static void main(String[] args) {
-        BiConsumer<Dummy, DummyInterface> consumer = (Dummy d, DummyInterface i) -> {};
+        BiConsumer<Dummy, DummyInterface[][]> consumer = (Dummy d, DummyInterface[][] i) -> {};
     }
 }

@@ -68,16 +68,27 @@ public class BytecodeExtractor {
      * outer and inner types.
      */
     private static void extractSignature(String signature, Collection<String> result) {
-        signature = normalize(signature);
-        var begin = signature.indexOf('<');
-        if (begin != -1) {
-            assert(signature.charAt(signature.length() - 1) == '>');
-            extractSignature(signature.substring(begin + 1, signature.length() - 1), result);
-        } else {
-            begin = signature.length();
+        int begin = 0;
+        while (begin < signature.length()) {
+            int nextChar = signature.charAt(begin);
+            if (nextChar == '<' || nextChar == '>' || nextChar == ';' ||
+                    nextChar == '[' || nextChar == '(' || nextChar == ')') {
+                ++begin;
+                continue;
+            } else if (nextChar == 'L') {
+                ++begin;
+                int end = begin;
+                nextChar = signature.charAt(end);
+                while (nextChar != '<' && nextChar != ';') {
+                    ++end;
+                    nextChar = signature.charAt(end);
+                }
+                result.add(signature.substring(begin, end).replace('/', '.'));
+                begin = end;
+            } else {
+                throw new IllegalStateException(signature);
+            }
         }
-
-        result.add(signature.substring(0, begin));
     }
 
     private SortedSet<String> extractTypenamesFrom(byte[] classFile) {
