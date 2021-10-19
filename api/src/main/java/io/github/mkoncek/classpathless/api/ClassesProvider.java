@@ -20,18 +20,19 @@ import java.util.List;
 
 public interface ClassesProvider {
     /**
-     * Callback for compiler, which provides, on demand, the dependencies the compiler is missing.
+     * Callback for compiler which provides, on demand, the dependencies the
+     * compiler is missing.
      *
      * @param names Names of classes the provider should return
-     * @return The bytecode of all found classes
+     * @return The bytecode files of all found classes
      */
     Collection<IdentifiedBytecode> getClass(ClassIdentifier... names);
 
     /**
-     * Warning: may include lambdas and will include inner classes with $notations.
-     * Intentionally not using ClassIdentifier, but may change to it
+     * Warning: may include lambdas and will include inner classes with $-notations.
+     * Intentionally not using ClassIdentifier, but may change to it.
      *
-     * @return all fully qualified classes visible from classpath
+     * @return All fully qualified classes visible from the provider's classpath
      */
     List<String> getClassPathListing();
 }
