@@ -25,6 +25,7 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -238,7 +239,7 @@ public class BytecodeExtractorTest {
     }
 
     @Test
-    void ExtendNestedInner() throws IOException {
+    void testExtendNestedInner() throws IOException {
         try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/ExtendNestedInner$Inner.class")) {
             var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
             genericCheck(result);
@@ -252,6 +253,43 @@ public class BytecodeExtractorTest {
             var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
             genericCheck(result);
             assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.Anonymous$1"));
+        }
+    }
+
+    @Test
+    void testFormalParameters1() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/FormalParameters1.class")) {
+            var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
+            genericCheck(result);
+            assertTrue(result.contains(Class.class.getName()));
+            assertTrue(result.contains(BiConsumer.class.getName()));
+            assertTrue(result.contains(AutoCloseable.class.getName()));
+            assertTrue(result.contains(DUMMY_NAME));
+        }
+    }
+
+    @Test
+    void testFormalParameters2() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/FormalParameters2.class")) {
+            var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
+            genericCheck(result);
+            assertTrue(result.contains(Class.class.getName()));
+            assertTrue(result.contains(BiConsumer.class.getName()));
+            assertTrue(result.contains(AutoCloseable.class.getName()));
+            assertTrue(result.contains(DUMMY_NAME));
+        }
+    }
+
+    @Test
+    void testFormalParameters3() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/FormalParameters3.class")) {
+            var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
+            genericCheck(result);
+            System.out.println(result);
+            assertTrue(result.contains(Class.class.getName()));
+            assertTrue(result.contains(BiConsumer.class.getName()));
+            assertTrue(result.contains(AutoCloseable.class.getName()));
+            assertTrue(result.contains(DUMMY_NAME));
         }
     }
 

@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
@@ -40,7 +41,8 @@ import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
  * methods, fields.
  */
 public class BytecodeExtractor {
-    static private final int CURRENT_ASM_OPCODE = org.objectweb.asm.Opcodes.ASM9;
+    private static final int CURRENT_ASM_OPCODE = org.objectweb.asm.Opcodes.ASM9;
+    private static final Pattern FORMAL_CONTENTS_PATTERN = Pattern.compile(".*?L(.*?)[;<]");
 
     private SortedSet<String> classes = new TreeSet<>();
 
@@ -63,30 +65,19 @@ public class BytecodeExtractor {
     }
 
     /**
-     * Signatures may contain type parameters, for example:
-     * "Ljava/util/function/Consumer<LType;>;", this function extracts both
-     * outer and inner types.
+     * Function for extracting the inner elements of formal parameters, i. e.
+     * those contained in <> parentheses. This function does not do full signature
+     * parsing, just a simple search. The types not catched by the regular expression
+     * should be already catched by other visitors.
+     * For reference about signatures, see:
+     * https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.3
      */
     private static void extractSignature(String signature, Collection<String> result) {
-        int begin = 0;
-        while (begin < signature.length()) {
-            int nextChar = signature.charAt(begin);
-            if (nextChar == '<' || nextChar == '>' || nextChar == ';' ||
-                    nextChar == '[' || nextChar == '(' || nextChar == ')') {
-                ++begin;
-                continue;
-            } else if (nextChar == 'L') {
-                ++begin;
-                int end = begin;
-                nextChar = signature.charAt(end);
-                while (nextChar != '<' && nextChar != ';') {
-                    ++end;
-                    nextChar = signature.charAt(end);
-                }
-                result.add(signature.substring(begin, end).replace('/', '.'));
-                begin = end;
-            } else {
-                throw new IllegalStateException(signature);
+        var matcher = FORMAL_CONTENTS_PATTERN.matcher(signature);
+        while (matcher.find()) {
+            var found = matcher.group(1);
+            if (found != null) {
+                result.add(found.replace('/', '.'));
             }
         }
     }
@@ -384,6 +375,9 @@ public class BytecodeExtractor {
         @Override
         public void visit(int version, int access, String name,
                 String signature, String superName, String[] interfaces) {
+            if (signature != null) {
+                extractSignature(signature, classes);
+            }
             classes.add(name.replace('/', '.'));
             if (superName != null) {
                 classes.add(superName.replace('/', '.'));
