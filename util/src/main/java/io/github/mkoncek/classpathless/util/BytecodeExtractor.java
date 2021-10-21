@@ -276,8 +276,6 @@ public class BytecodeExtractor {
             return new ExtrAnnotationVisitor();
         }
 
-
-
         @Override
         public AnnotationVisitor visitTypeAnnotation(int typeRef,
                 TypePath typePath, String descriptor, boolean visible) {
