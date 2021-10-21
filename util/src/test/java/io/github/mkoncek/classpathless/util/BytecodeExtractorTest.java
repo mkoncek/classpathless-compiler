@@ -285,7 +285,6 @@ public class BytecodeExtractorTest {
         try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/FormalParameters3.class")) {
             var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
             genericCheck(result);
-            System.out.println(result);
             assertTrue(result.contains(Class.class.getName()));
             assertTrue(result.contains(BiConsumer.class.getName()));
             assertTrue(result.contains(AutoCloseable.class.getName()));
