@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 import javax.tools.Diagnostic;
@@ -54,7 +53,6 @@ public class CompilerJavac implements ClasspathlessCompiler {
     private InMemoryFileManager fileManager;
     private Arguments arguments;
     private List<SourcePostprocessor> postprocessors = new ArrayList<>();
-    private final Pattern LAMBDA_MATCHER = Pattern.compile("^.*\\$\\$Lambda\\$[\\d]+/0x[0-9a-f]+$");
 
     private static ClassIdentifier getIdentifier(JavaFileObject object) {
         /// Remove the leading "/"
@@ -114,16 +112,27 @@ public class CompilerJavac implements ClasspathlessCompiler {
         postprocessors.add(postprocessor);
     }
 
-    private static void transitiveImport(IdentifiedBytecode bytecode, ClassesProvider classprovider, Set<String> result) {
+    private static void transitiveImport(IdentifiedBytecode bytecode, ClassesProvider classprovider,
+            Set<String> result, LoggingSwitch loggingSwitch) {
         result.add(bytecode.getClassIdentifier().getFullName());
         for (var typename : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
             if (result.add(typename)) {
-                int nestedPos = typename.indexOf('$');
-                if (nestedPos != -1 && nestedPos + 1 < typename.length()) {
-                    typename = typename.substring(0, nestedPos);
-                    if (result.add(typename)) {
-                        for (var outerBytecode : classprovider.getClass(new ClassIdentifier(typename))) {
-                            result.addAll(BytecodeExtractor.extractNestedClasses(outerBytecode.getFile(), classprovider));
+                int nestedPos = -1;
+                while ((nestedPos = typename.indexOf('$', nestedPos + 1)) != -1 &&
+                        nestedPos + 1 < typename.length()) {
+                    var nestedTypename = typename.substring(0, nestedPos);
+                    if (!result.contains(nestedTypename)) {
+                        var outerBytecodes = classprovider.getClass(new ClassIdentifier(nestedTypename));
+                        if (outerBytecodes.isEmpty()) {
+                            loggingSwitch.logln(Level.FINE, "Typename {0} is not a valid class", nestedTypename);
+                        } else {
+                            result.add(nestedTypename);
+                            for (var outerBytecode : outerBytecodes) {
+                                for (var nestedClass : BytecodeExtractor.extractNestedClasses(outerBytecode.getFile(), classprovider)) {
+                                    result.add(nestedClass);
+                                    loggingSwitch.logln(Level.FINE, "Adding nested class {0}", nestedClass);
+                                }
+                            }
                         }
                     }
                 }
@@ -143,17 +152,13 @@ public class CompilerJavac implements ClasspathlessCompiler {
         Collection<InMemoryJavaSourceFileObject> compilationUnits = new ArrayList<>();
         var availableClasses = new TreeSet<String>();
 
-        // Workaround to expose this annotation even though it only has SOURCE
-        // retention. The decompilers use it anyway.
-        availableClasses.add("java.lang.Override");
-
         for (var source : javaSourceFiles) {
             compilationUnits.add(new InMemoryJavaSourceFileObject(source));
             for (var bytecode : classprovider.getClass(source.getClassIdentifier())) {
-                transitiveImport(bytecode, classprovider, availableClasses);
+                transitiveImport(bytecode, classprovider, availableClasses, loggingSwitch);
                 for (var nestedClass : BytecodeExtractor.extractNestedClasses(bytecode.getFile(), classprovider)) {
                     for (var nestedBytecode : classprovider.getClass(new ClassIdentifier(nestedClass))) {
-                        transitiveImport(nestedBytecode, classprovider, availableClasses);
+                        transitiveImport(nestedBytecode, classprovider, availableClasses, loggingSwitch);
                     }
                 }
             }
@@ -166,15 +171,16 @@ public class CompilerJavac implements ClasspathlessCompiler {
                 loggingSwitch.logln(Level.FINE, "Ignoring class from classpath listing: {0}", additionalClass);
                 continue;
             }
-
-            var matcher = LAMBDA_MATCHER.matcher(additionalClass);
-            if (matcher.matches()) {
+            if (additionalClass.contains("/")) {
                 loggingSwitch.logln(Level.FINE, "Ignoring lambda class from classpath listing: {0}", additionalClass);
                 continue;
             }
-
             availableClasses.add(additionalClass);
         }
+
+        // Workaround to expose this annotation even though it only has SOURCE
+        // retention. The decompilers use it anyway.
+        availableClasses.add("java.lang.Override");
 
         loggingSwitch.logln(Level.INFO, "All available typenames: {0}", availableClasses);
 
