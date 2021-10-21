@@ -23,7 +23,6 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 
@@ -62,9 +61,8 @@ public class InMemoryJavaSourceFileObject extends IdentifiedJavaFileObject {
         this.source = source;
     }
 
-    @SuppressFBWarnings(value = {"NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"}, justification = "can not see it:(")
     public InMemoryJavaSourceFileObject(Path path) throws IOException {
-        this(path.getFileName().toString(), new FileInputStream(path.toFile()));
+        this(path.toFile().getCanonicalPath().substring(1), new FileInputStream(path.toFile()));
     }
 
     public InMemoryJavaSourceFileObject(IdentifiedSource source) {
