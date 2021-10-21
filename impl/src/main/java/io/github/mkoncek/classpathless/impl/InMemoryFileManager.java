@@ -16,8 +16,6 @@
 package io.github.mkoncek.classpathless.impl;
 
 import java.io.IOException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -175,11 +173,7 @@ public class InMemoryFileManager implements JavaFileManager {
         loggingSwitch.trace(this, "getClassLoader", location);
         var result = delegate.getClassLoader(location);
         loggingSwitch.trace(result);
-        return (ClassLoader)AccessController.doPrivileged(new PrivilegedAction() {
-            public Object run() {
-                return new DelegatingClassLoader(result, loggingSwitch);
-            }
-        });
+        return result;
     }
 
     @Override
