@@ -28,7 +28,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
-import javax.annotation.Nonnull;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
@@ -108,7 +107,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
         this(new Arguments().useHostSystemClasses(true));
     }
 
-    public void addPostProcessor(@Nonnull SourcePostprocessor postprocessor) {
+    public void addPostProcessor(SourcePostprocessor postprocessor) {
         postprocessors.add(postprocessor);
     }
 
