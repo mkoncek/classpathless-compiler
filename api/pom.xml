@@ -6,12 +6,12 @@
   <parent>
     <groupId>io.github.mkoncek</groupId>
     <artifactId>classpathless-compiler-parent</artifactId>
-    <version>1.8-SNAPSHOT</version>
+    <version>1.8</version>
     <relativePath>..</relativePath>
   </parent>
 
   <artifactId>classpathless-compiler-api</artifactId>
-  <version>1.8-SNAPSHOT</version>
+  <version>1.8</version>
 
   <name>Classpathless Compiler API</name>
 
