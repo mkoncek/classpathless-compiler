@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.github.mkoncek.classpathless.impl;
+package io.github.mkoncek.classpathless;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;

@@ -34,7 +34,6 @@ import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 import io.github.mkoncek.classpathless.impl.CompilerJavac;
 import io.github.mkoncek.classpathless.impl.InMemoryJavaSourceFileObject;
-import io.github.mkoncek.classpathless.impl.JavaSourceReader;
 import io.github.mkoncek.classpathless.impl.PrintingMessagesListener;
 
 /**
