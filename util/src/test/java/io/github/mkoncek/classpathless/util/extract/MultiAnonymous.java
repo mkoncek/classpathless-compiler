@@ -15,33 +15,22 @@
  */
 package io.github.mkoncek.classpathless.util.extract;
 
-public class MultiNested {
-    class Nested1 {
-        class Nested11 {
-            class Nested111 {
-            }
-
-            class Nested112 {
-            }
-        }
-
-        class Nested12 {
-            class Nested121 {
-                class Nested1211 {
-                    void f() {
-                        class Method {
-                        }
+public class MultiAnonymous {
+    public static void main(String[] args) {
+        new Runnable() {
+            @Override
+            public void run() {
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                            }
+                        }.run();
                     }
-                    void g() {
-                        class Method {
-                        }
-                    }
-                    Runnable r = () -> {
-                        class Method {
-                        }
-                    };
-                }
+                }.run();
             }
-        }
+        }.run();
     }
 }

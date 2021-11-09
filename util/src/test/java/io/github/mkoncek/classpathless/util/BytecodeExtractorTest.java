@@ -302,6 +302,66 @@ public class BytecodeExtractorTest {
     }
 
     @Test
+    void testFormalParameters4() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/FormalParameters4.class")) {
+            var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
+            genericCheck(result);
+            assertTrue(result.contains(Class.class.getName()));
+            assertTrue(result.contains(BiConsumer.class.getName()));
+            assertTrue(result.contains(AutoCloseable.class.getName()));
+            assertTrue(result.contains(DUMMY_NAME));
+        }
+    }
+
+    /**
+     * NOTE: We considered a test where the type being extended is itself also
+     * a generic class but that is not possible. Generic class cannot implement
+     * Throwable.
+     * @throws IOException
+     */
+    @Test
+    void testFormalParameters5() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/FormalParameters5.class")) {
+            var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
+            genericCheck(result);
+            assertTrue(result.contains(DummyException.class.getName()));
+        }
+    }
+
+    @Test
+    void testFormalParameters6() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/FormalParameters6.class")) {
+            var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
+            genericCheck(result);
+            assertTrue(result.contains(Class.class.getName()));
+            assertTrue(result.contains(BiConsumer.class.getName()));
+            assertTrue(result.contains(AutoCloseable.class.getName()));
+            assertTrue(result.contains(DUMMY_NAME));
+        }
+    }
+
+    @Test
+    void testFormalParameters7() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/FormalParameters7.class")) {
+            var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
+            genericCheck(result);
+            assertTrue(result.contains(Class.class.getName()));
+            assertTrue(result.contains(BiConsumer.class.getName()));
+            assertTrue(result.contains(AutoCloseable.class.getName()));
+            assertTrue(result.contains(DUMMY_NAME));
+        }
+    }
+
+    @Test
+    void testAnnotationFormal1() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/AnnotationFormal1.class")) {
+            var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
+            genericCheck(result);
+            assertTrue(result.contains(DUMMY_ANNOTATION_NAME));
+        }
+    }
+
+    @Test
     void testAnnotationClass() throws IOException {
         try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/AnnotationClass.class")) {
             var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
@@ -487,7 +547,10 @@ public class BytecodeExtractorTest {
             assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12"));
             assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121"));
             assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211"));
-            assertTrue(result.size() == 7);
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$1Method"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$2Method"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$3Method"));
+            assertTrue(result.size() == 10);
         }
     }
 
@@ -497,6 +560,17 @@ public class BytecodeExtractorTest {
             var result = BytecodeExtractor.extractNestedClasses(is.readAllBytes(), new FSProvider());
             assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.Anonymous$1"));
             assertTrue(result.size() == 1);
+        }
+    }
+
+    @Test
+    void testExtractMultiAnonymous() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/MultiAnonymous.class")) {
+            var result = BytecodeExtractor.extractNestedClasses(is.readAllBytes(), new FSProvider());
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiAnonymous$1"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiAnonymous$1$1"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiAnonymous$1$1$1"));
+            assertTrue(result.size() == 3);
         }
     }
 }

@@ -39,6 +39,10 @@ import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 /**
  * A utility class to extract useful information fomr class files like typenames
  * methods, fields.
+ *
+ * @implNote Function `normalize` was originally supposed to extract types from
+ * type descriptors. It is however also used on raw types obtained by calls to
+ * `Type.getInternalName()`, this causes no trouble so far.
  */
 public class BytecodeExtractor {
     private static final int CURRENT_ASM_OPCODE = org.objectweb.asm.Opcodes.ASM9;
@@ -47,9 +51,10 @@ public class BytecodeExtractor {
     private SortedSet<String> classes = new TreeSet<>();
 
     /**
-     * Extract type fully qualified type name from a type or descriptor.
-     * @param value
-     * @return
+     * Extract type fully qualified type name from a type or descriptor. This
+     * function is not used on signatures which may contain formal parameters.
+     * @param value Raw type descriptor or just the type name.
+     * @return The simple string representing the fully-qualified name of the class
      */
     private static String normalize(String value) {
         assert(!value.startsWith("("));
