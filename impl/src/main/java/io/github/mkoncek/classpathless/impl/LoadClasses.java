@@ -34,7 +34,12 @@ public class LoadClasses {
                 break;
             }
 
-            if (availableClassName.length() > packageName.length() + 1) {
+            if (packageName.isEmpty()) {
+                if (availableClassName.contains(".") && !recurse) {
+                    loggingSwitch.logln(Level.FINE, "Skipping over class from a package from ClassProvider: \"{0}\"", availableClassName);
+                    continue;
+                }
+            } else if (availableClassName.length() > packageName.length() + 1) {
                 if (availableClassName.substring(packageName.length() + 1).contains(".") && !recurse) {
                     loggingSwitch.logln(Level.FINE, "Skipping over class from a subpackage from ClassProvider: \"{0}\"", availableClassName);
                     continue;

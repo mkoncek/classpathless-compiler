@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -245,20 +246,33 @@ public class InMemoryFileManager implements JavaFileManager {
         }
     }
 
+    private boolean useProvidedSystemClasses(Location location, String packageName) {
+        if (!arguments.useHostSystemClasses()) {
+            String locationName = location.getName();
+            // Java version >= 9
+            if (locationName.equals("SYSTEM_MODULES[java.base]")) {
+                return true;
+            }
+            // Java version < 9
+            if (locationName.equals("PLATFORM_CLASS_PATH")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public Iterable<JavaFileObject> list(Location location, String packageName,
             Set<Kind> kinds, boolean recurse) throws IOException {
         loggingSwitch.trace(this, "list", location, packageName, kinds, recurse);
 
-        if (location.equals(StandardLocation.CLASS_PATH)
-                || (!arguments.useHostSystemClasses()
-                        && location.getName().equals("SYSTEM_MODULES[java.base]"))) {
+        if (location.getName().equals("PLATFORM_CLASS_PATH") && !arguments.useHostSystemClasses()) {
+            return Collections.emptyList();
+        }
+
+        if (location.equals(StandardLocation.CLASS_PATH) || useProvidedSystemClasses(location, packageName)) {
             var result = new ArrayList<JavaFileObject>();
-
-            if (!packageName.isEmpty()) {
-                result.addAll(LoadClasses.loadClasses(availableClasses, packageName, recurse, classprovider, loggingSwitch));
-            }
-
+            result.addAll(LoadClasses.loadClasses(availableClasses, packageName, recurse, classprovider, loggingSwitch));
             loggingSwitch.trace(result);
             return result;
         } else {
