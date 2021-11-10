@@ -75,9 +75,10 @@ public class InMemoryJavaClassFileObject extends IdentifiedJavaFileObject {
                 byteStream.write(bytecodes.iterator().next().getFile());
                 classProvider = null;
             } else if (bytecodes.size() == 0) {
-                loggingSwitch.logln(Level.FINEST, "BytecodeExtractor for {0} not found", this);
+                loggingSwitch.logln(Level.FINEST, "Bytecode for {0} not found", this);
+                throw new RuntimeException("Compiler tried to access the bytecode of " + toUri().toString() + " which could not be provided");
             } else {
-                throw new IllegalStateException();
+                throw new IllegalStateException("[CPLC] InMemoryJavaClassFileObject::openInputStream: ClassesProvider provded more than one class");
             }
         }
 

@@ -31,13 +31,13 @@ public class InMemoryJavaClassFileObjectTest {
 
     @Test
     void testConstructor() {
-        var obj = new InMemoryJavaClassFileObject("Hello.class", new NullClassesProvider());
+        var obj = new InMemoryJavaClassFileObject("Hello.class", null);
         assertEquals("class:///Hello.class", obj.toUri().toASCIIString());
     }
 
     @Test
     void testContent() throws IOException {
-        var obj = new InMemoryJavaClassFileObject("Hello.class", new NullClassesProvider());
+        var obj = new InMemoryJavaClassFileObject("Hello.class", null);
         String classFile = "src/test/resources/io/github/mkoncek/classpathless/impl/simple-class/Hello.class";
 
         Files.deleteIfExists(Paths.get(classFile));
