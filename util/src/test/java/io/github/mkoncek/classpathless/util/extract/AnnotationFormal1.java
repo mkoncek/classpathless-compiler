@@ -18,7 +18,7 @@ package io.github.mkoncek.classpathless.util.extract;
 import java.util.function.BiConsumer;
 
 public class AnnotationFormal1 {
-    public <T extends Class<? super BiConsumer<@DummyAnnotation AutoCloseable, Dummy>>>
+    public @DummyAnnotation <T extends Class<? super BiConsumer<AutoCloseable, Dummy>>>
     T method() {
         return null;
     }
