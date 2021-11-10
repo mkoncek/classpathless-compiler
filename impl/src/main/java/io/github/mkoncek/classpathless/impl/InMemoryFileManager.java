@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.logging.Level;
 
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
@@ -249,12 +250,12 @@ public class InMemoryFileManager implements JavaFileManager {
     private boolean useProvidedSystemClasses(Location location, String packageName) {
         if (!arguments.useHostSystemClasses()) {
             String locationName = location.getName();
-            // Java version >= 9
-            if (locationName.equals("SYSTEM_MODULES[java.base]")) {
-                return true;
-            }
             // Java version < 9
             if (locationName.equals("PLATFORM_CLASS_PATH")) {
+                return true;
+            }
+            // Java version >= 9
+            if (locationName.equals("SYSTEM_MODULES[java.base]")) {
                 return true;
             }
         }
@@ -267,6 +268,19 @@ public class InMemoryFileManager implements JavaFileManager {
         loggingSwitch.trace(this, "list", location, packageName, kinds, recurse);
 
         if (location.getName().equals("PLATFORM_CLASS_PATH") && !arguments.useHostSystemClasses()) {
+            for (var jfobject : delegate.list(location, packageName, kinds, recurse)) {
+                String name = jfobject.toUri().getPath();
+                // Ignore strange non-class files and module-info.class
+                if (name.startsWith("/modules/") && name.endsWith(".class") && ! name.contains("-")) {
+                    name = name.substring(9, name.length() - 6);
+                    // Ignore "java.base" until the next slash
+                    int begin = name.indexOf('/') + 1;
+                    name = name.substring(begin).replace('/', '.');
+                    availableClasses.add(name);
+                } else {
+                    loggingSwitch.logln(Level.FINE, "Skipping over file object: \"{0}\"", name);
+                }
+            }
             return Collections.emptyList();
         }
 
