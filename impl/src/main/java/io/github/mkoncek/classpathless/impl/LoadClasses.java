@@ -22,8 +22,6 @@ import java.util.SortedSet;
 import java.util.logging.Level;
 
 import io.github.mkoncek.classpathless.api.ClassesProvider;
-import io.github.mkoncek.classpathless.impl.InMemoryJavaClassFileObject;
-import io.github.mkoncek.classpathless.impl.LoggingSwitch;
 
 public class LoadClasses {
     public static Collection<InMemoryJavaClassFileObject> loadClasses(SortedSet<String> availableClasses,
@@ -45,7 +43,7 @@ public class LoadClasses {
 
             loggingSwitch.logln(Level.FINE, "Loading class from ClassProvider: \"{0}\"", availableClassName);
 
-            result.add(new InMemoryJavaClassFileObject(availableClassName, classprovider));
+            result.add(new InMemoryJavaClassFileObject(availableClassName, classprovider, loggingSwitch));
         }
 
         return result;
