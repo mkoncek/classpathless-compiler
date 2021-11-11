@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 
 import javax.tools.FileObject;
@@ -47,6 +48,9 @@ public class InMemoryFileManager implements JavaFileManager {
     private LoggingSwitch loggingSwitch = null;
 
     private ArrayList<InMemoryJavaClassFileObject> classOutputs = new ArrayList<>();
+
+    private static final String HOST_SYSTEM_CLASS_PATH = "PLATFORM_CLASS_PATH";
+    private static final String HOST_SYSTEM_MODULES = "SYSTEM_MODULES[java.base]";
 
     public InMemoryFileManager(JavaFileManager delegate) {
         super();
@@ -122,7 +126,7 @@ public class InMemoryFileManager implements JavaFileManager {
         if (location.equals(StandardLocation.SYSTEM_MODULES) && !arguments.useHostSystemClasses()) {
             for (var set : result) {
                 for (var loc : set) {
-                    if (loc.getName().equals("SYSTEM_MODULES[java.base]")) {
+                    if (loc.getName().equals(HOST_SYSTEM_MODULES)) {
                         result = Arrays.asList(Set.of(loc));
                         break;
                     }
@@ -251,15 +255,33 @@ public class InMemoryFileManager implements JavaFileManager {
         if (!arguments.useHostSystemClasses()) {
             String locationName = location.getName();
             // Java version < 9
-            if (locationName.equals("PLATFORM_CLASS_PATH")) {
+            if (locationName.equals(HOST_SYSTEM_CLASS_PATH)) {
                 return true;
             }
             // Java version >= 9
-            if (locationName.equals("SYSTEM_MODULES[java.base]")) {
+            if (locationName.equals(HOST_SYSTEM_MODULES)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private ArrayList<String> hostClassesNames(Iterable<JavaFileObject> jfobjects) {
+        var result = new ArrayList<String>();
+        for (var jfobject : jfobjects) {
+            String name = jfobject.getName();
+            // Ignore strange non-class files and module-info.class
+            if (name.startsWith("/modules/") && name.endsWith(".class") && !name.contains("-")) {
+                name = name.substring(9, name.length() - 6);
+                // Ignore "java.base" until the next slash
+                int begin = name.indexOf('/') + 1;
+                name = name.substring(begin).replace('/', '.');
+                result.add(name);
+            } else {
+                loggingSwitch.logln(Level.FINE, "Skipping over file object: \"{0}\"", name);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -267,21 +289,25 @@ public class InMemoryFileManager implements JavaFileManager {
             Set<Kind> kinds, boolean recurse) throws IOException {
         loggingSwitch.trace(this, "list", location, packageName, kinds, recurse);
 
-        if (location.getName().equals("PLATFORM_CLASS_PATH") && !arguments.useHostSystemClasses()) {
-            for (var jfobject : delegate.list(location, packageName, kinds, recurse)) {
-                String name = jfobject.toUri().getPath();
-                // Ignore strange non-class files and module-info.class
-                if (name.startsWith("/modules/") && name.endsWith(".class") && ! name.contains("-")) {
-                    name = name.substring(9, name.length() - 6);
-                    // Ignore "java.base" until the next slash
-                    int begin = name.indexOf('/') + 1;
-                    name = name.substring(begin).replace('/', '.');
+        if (!arguments.useHostSystemClasses()) {
+            if (location.getName().equals(HOST_SYSTEM_CLASS_PATH)) {
+                for (String name : hostClassesNames(delegate.list(location, packageName, kinds, recurse))) {
                     availableClasses.add(name);
-                } else {
-                    loggingSwitch.logln(Level.FINE, "Skipping over file object: \"{0}\"", name);
                 }
+                var result = Collections.<JavaFileObject>emptyList();
+                loggingSwitch.trace(result);
+                return result;
+            } else if (location.getName().equals(HOST_SYSTEM_MODULES)) {
+                var result = new TreeSet<JavaFileObject>((var lhs, var rhs) -> {
+                    return ((InMemoryJavaClassFileObject)(lhs)).getClassIdentifier().compareTo(((InMemoryJavaClassFileObject)(rhs)).getClassIdentifier());
+                });
+                result.addAll(LoadClasses.loadClasses(availableClasses, packageName, recurse, classprovider, loggingSwitch));
+                for (String name : hostClassesNames(delegate.list(location, packageName, kinds, recurse))) {
+                    result.add(new InMemoryJavaClassFileObject(name, classprovider, loggingSwitch));
+                }
+                loggingSwitch.trace(result);
+                return result;
             }
-            return Collections.emptyList();
         }
 
         if (location.equals(StandardLocation.CLASS_PATH) || useProvidedSystemClasses(location, packageName)) {
