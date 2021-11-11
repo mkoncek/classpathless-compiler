@@ -50,6 +50,7 @@ public class InMemoryJavaSourceFileObject extends IdentifiedJavaFileObject {
 
     @Override
     ClassIdentifier getClassIdentifier() {
+        // Remove "string:///" prefix
         return new ClassIdentifier(toUri().toString().substring(10));
     }
 
@@ -66,9 +67,9 @@ public class InMemoryJavaSourceFileObject extends IdentifiedJavaFileObject {
     }
 
     public InMemoryJavaSourceFileObject(IdentifiedSource source) {
-        /// NOTE the JavaFileObject's toUri method needs to return something
-        /// that ends with the proper Java source file name and extension
-        /// otherwise the compiler throws an error
+        // NOTE: The JavaFileObject's toUri method needs to return something
+        // that ends with the proper Java source file name and extension
+        // otherwise the compiler throws an error
         this(source.getClassIdentifier().getFullName().replace(".", "/") + ".java",
                 source.getSourceCode());
     }

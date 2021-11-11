@@ -18,7 +18,7 @@ package io.github.mkoncek.classpathless.api;
 import java.util.Objects;
 
 /**
- * Wrapper around fully qualified class name.
+ * Wrapper around a fully qualified class name.
  */
 public class ClassIdentifier implements Comparable<ClassIdentifier> {
     private final String fullName;

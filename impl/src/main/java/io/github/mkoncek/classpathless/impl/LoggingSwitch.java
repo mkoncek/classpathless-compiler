@@ -52,9 +52,10 @@ public class LoggingSwitch {
             if (logging.isEmpty()) {
                 printer = System.err;
             } else {
+                // DO NOT USE try-with-resources, we do not want to close the stream
                 FileOutputStream os;
                 try {
-                    /// TODO not closed if any exception happens
+                    // TODO not closed if any exception happens
                     os = new FileOutputStream(Paths.get(logging).toFile(), true);
                     printer = new PrintStream(os, true, StandardCharsets.UTF_8);
                 } catch (IOException ex) {
@@ -117,14 +118,14 @@ public class LoggingSwitch {
     }
 
     public void log(boolean traced, java.util.logging.Level level, String format, Object... args) {
-        /// TODO contact JRD
+        // TODO contact JRD
         /*
         if (!traced && listener != null) {
             listener.addMessage(level, format, args);
         }
          */
 
-        /// TODO delete this line, this is here just to silence spotbugs
+        // TODO delete this line, this is here just to silence spotbugs
         {
             var ls = listener;
             listener = null;

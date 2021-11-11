@@ -87,7 +87,7 @@ public class Tool {
                 var classPath = Paths.get(inputFile).getFileName();
                 if (classPath != null) {
                     var className = classPath.toString();
-                    /// Remove ".java"
+                    // Remove ".java"
                     className = className.substring(0, className.length() - 5);
                     if (fullyQualifiedName == null) {
                         fullyQualifiedName = className;

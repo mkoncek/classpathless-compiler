@@ -59,7 +59,7 @@ public class NullClassesProvider implements ClassesProvider {
                 throw new IllegalStateException();
             }
 
-            /// Ad-hoc imports necessary to pass tests
+            // Ad-hoc imports necessary to pass tests
             for (var importName : Arrays.asList("java.lang", "java.io", "java.lang.invoke", "java.lang.annotation")) {
                 for (var entry : fm.list(baseLocation, importName, Set.of(Kind.SOURCE, Kind.CLASS, Kind.HTML, Kind.OTHER), false)) {
                     var name = fm.inferBinaryName(baseLocation, entry);
@@ -98,30 +98,5 @@ public class NullClassesProvider implements ClassesProvider {
         }
 
         return result;
-    }
-
-    public static void main(String[] args) throws IOException {
-        var fm = ToolProvider.getSystemJavaCompiler().getStandardFileManager(null, null, StandardCharsets.UTF_8);
-
-        // for (var loc : fm.list(StandardLocation.SYSTEM_MODULES, "", Set.of(Kind.SOURCE, Kind.CLASS, Kind.HTML, Kind.OTHER), true)) {
-        for (var set : fm.listLocationsForModules(StandardLocation.SYSTEM_MODULES)) {
-            for (var loc : set) {
-                if (loc.getName().equals("SYSTEM_MODULES[java.base]")) {
-                    int size = 0;
-                    var objs = fm.list(StandardLocation.CLASS_PATH, "", Set.of(Kind.CLASS), true);
-                    for (var obj : objs) {
-                        System.out.println(obj);
-                        ++size;
-                    }
-                    System.out.println(size);
-                }
-
-                // System.out.println(loc.getName());
-                var jf = fm.getJavaFileForInput(loc, "module-info", Kind.CLASS);
-                try (var is = jf.openInputStream()) {
-                    // System.out.println(new String(is.readAllBytes(), StandardCharsets.UTF_8));
-                }
-            }
-        }
     }
 }

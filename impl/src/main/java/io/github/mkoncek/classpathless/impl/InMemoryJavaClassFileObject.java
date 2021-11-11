@@ -28,6 +28,9 @@ import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 
 /**
+ * @implNote This class is implemented in terms of lazy loading. That makes it
+ * possible for the JavaFileManager to expose file objects in its listing which
+ * actually cannot be provided by the provider.
  * @author Marián Konček
  */
 public class InMemoryJavaClassFileObject extends IdentifiedJavaFileObject {
@@ -76,7 +79,7 @@ public class InMemoryJavaClassFileObject extends IdentifiedJavaFileObject {
                 classProvider = null;
             } else if (bytecodes.size() == 0) {
                 loggingSwitch.logln(Level.FINEST, "Bytecode for {0} not found", this);
-                throw new RuntimeException("Compiler tried to access the bytecode of " + toUri().toString() + " which could not be provided");
+                throw new RuntimeException("Compiler tried to access the bytecode of \"" + getName() + "\" which could not be provided");
             } else {
                 throw new IllegalStateException("[CPLC] InMemoryJavaClassFileObject::openInputStream: ClassesProvider provded more than one class");
             }

@@ -54,7 +54,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
     private List<SourcePostprocessor> postprocessors = new ArrayList<>();
 
     private static ClassIdentifier getIdentifier(JavaFileObject object) {
-        /// Remove the leading "/"
+        // Remove the leading "/"
         return new ClassIdentifier(object.getName().substring(1));
     }
 
@@ -111,8 +111,8 @@ public class CompilerJavac implements ClasspathlessCompiler {
         postprocessors.add(postprocessor);
     }
 
-    private static void transitiveImport(IdentifiedBytecode bytecode, ClassesProvider classprovider,
-            Set<String> result, LoggingSwitch loggingSwitch) {
+    private static void transitiveImport(IdentifiedBytecode bytecode,
+            ClassesProvider classprovider, Set<String> result, LoggingSwitch loggingSwitch) {
         result.add(bytecode.getClassIdentifier().getFullName());
         for (var typename : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
             if (result.add(typename)) {
@@ -127,7 +127,8 @@ public class CompilerJavac implements ClasspathlessCompiler {
                         } else {
                             result.add(nestedTypename);
                             for (var outerBytecode : outerBytecodes) {
-                                for (var nestedClass : BytecodeExtractor.extractNestedClasses(outerBytecode.getFile(), classprovider)) {
+                                for (var nestedClass : BytecodeExtractor.extractNestedClasses(
+                                        outerBytecode.getFile(), classprovider)) {
                                     result.add(nestedClass);
                                     loggingSwitch.logln(Level.FINE, "Adding nested class {0}", nestedClass);
                                 }
@@ -203,10 +204,13 @@ public class CompilerJavac implements ClasspathlessCompiler {
                 for (var cu : compilationUnits) {
                     if (entry.getKey().equals(cu.getClassIdentifier())) {
                         for (var postprocessor : postprocessors) {
-                            var result = postprocessor.postprocess(cu.getIdentifiedSource(), entry.getValue());
+                            var result = postprocessor.postprocess(
+                                    cu.getIdentifiedSource(), entry.getValue());
                             if (result.changed) {
                                 sourcesChanged = true;
-                                messagesListener.addMessage(Level.INFO, "SourcePostprocessor: reloading the source code of {0}", cu.getClassIdentifier().getFullName());
+                                messagesListener.addMessage(Level.INFO,
+                                        "SourcePostprocessor: reloading the source code of {0}",
+                                        cu.getClassIdentifier().getFullName());
                                 cu.setSource(result.source.getSourceCode());
                             }
                         }

@@ -81,12 +81,12 @@ public class ClasspathClassesProvider implements ClassesProvider {
      * @return Dummy list of strings representing the roots and /* expanded to jar files
      */
     static List<String> obtainClasspath(String classpath) {
-        /// https://docs.oracle.com/javase/8/docs/technotes/tools/windows/classpath.html
+        // https://docs.oracle.com/javase/8/docs/technotes/tools/windows/classpath.html
 
         var unexpanded = Arrays.asList(classpath.split(CP_SEPARATOR));
         var result = new ArrayList<String>();
 
-        /// TODO consider symbolic links
+        // TODO consider symbolic links
         for (var name : unexpanded) {
             if (name.endsWith("/*")) {
                 var root = Paths.get(name.substring(0, name.length() - 1));
@@ -108,7 +108,7 @@ public class ClasspathClassesProvider implements ClassesProvider {
     }
 
     static Map<String, Path> findAllClasses(List<String> classpath) {
-        /// TODO handle jars
+        // TODO handle jars
 
         var result = new HashMap<String, Path>();
 

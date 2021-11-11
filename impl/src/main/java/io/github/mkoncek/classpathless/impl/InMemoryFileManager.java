@@ -126,6 +126,11 @@ public class InMemoryFileManager implements JavaFileManager {
         result = delegate.listLocationsForModules(location);
 
         if (location.equals(StandardLocation.SYSTEM_MODULES) && !arguments.useHostSystemClasses()) {
+            // Only expose the one module which contains java.lang package.
+            // If the compiler doesn't get it, it will fail and not look for
+            // java.lang further for example on classpath.
+            // Even though we expose the host module, the invocation of list
+            // will return a list of system classes provided by the provider.
             for (var set : result) {
                 for (var loc : set) {
                     if (loc.getName().equals(HOST_SYSTEM_MODULES)) {
@@ -216,8 +221,8 @@ public class InMemoryFileManager implements JavaFileManager {
             String className, Kind kind, FileObject sibling) throws IOException {
         loggingSwitch.trace(this, "getJavaFileForOutput", location, className, kind, sibling);
         if (kind.equals(Kind.CLASS) && location.equals(StandardLocation.CLASS_OUTPUT)) {
-            /// We do not construct with ClassesProvider because the write will
-            /// happen by the caller
+            // We do not construct with ClassesProvider because the write will
+            // happen by the caller
             var result = new InMemoryJavaClassFileObject(className, null);
             loggingSwitch.trace(result);
             classOutputs.add(result);
@@ -253,7 +258,44 @@ public class InMemoryFileManager implements JavaFileManager {
         }
     }
 
-    private ArrayList<String> hostClassesNames(Iterable<JavaFileObject> jfobjects) {
+    /**
+     * A utility method which loads all available classes as a collection of
+     * file objects for a given package name.
+     */
+    private Collection<InMemoryJavaClassFileObject> loadClasses(
+            String packageName, boolean recurse) throws IOException {
+        var result = new ArrayList<InMemoryJavaClassFileObject>();
+
+        for (var availableClassName : availableClasses.tailSet(packageName)) {
+            if (!availableClassName.startsWith(packageName)) {
+                break;
+            }
+
+            if (packageName.isEmpty()) {
+                if (availableClassName.contains(".") && !recurse) {
+                    loggingSwitch.logln(Level.FINE, "Skipping over class from a package from ClassProvider: \"{0}\"", availableClassName);
+                    continue;
+                }
+            } else if (availableClassName.length() > packageName.length() + 1) {
+                if (availableClassName.substring(packageName.length() + 1).contains(".") && !recurse) {
+                    loggingSwitch.logln(Level.FINE, "Skipping over class from a subpackage from ClassProvider: \"{0}\"", availableClassName);
+                    continue;
+                }
+            }
+
+            loggingSwitch.logln(Level.FINE, "Loading class from ClassProvider: \"{0}\"", availableClassName);
+
+            result.add(new InMemoryJavaClassFileObject(availableClassName, classprovider, loggingSwitch));
+        }
+
+        return result;
+    }
+
+    /**
+     * A utility which extracts the fully qualified names of given file objects
+     * assuming they are the host system classes returned by the StandardJavaFileManager.
+     */
+    private Collection<String> hostClassesNames(Iterable<JavaFileObject> jfobjects) {
         var result = new ArrayList<String>();
         for (var jfobject : jfobjects) {
             String name = jfobject.getName();
@@ -294,7 +336,7 @@ public class InMemoryFileManager implements JavaFileManager {
                 var result = new TreeSet<JavaFileObject>((var lhs, var rhs) -> {
                     return ((InMemoryJavaClassFileObject)(lhs)).getClassIdentifier().compareTo(((InMemoryJavaClassFileObject)(rhs)).getClassIdentifier());
                 });
-                result.addAll(LoadClasses.loadClasses(availableClasses, packageName, recurse, classprovider, loggingSwitch));
+                result.addAll(loadClasses(packageName, recurse));
                 for (String name : hostClassesNames(delegate.list(location, packageName, kinds, recurse))) {
                     result.add(new InMemoryJavaClassFileObject(name, classprovider, loggingSwitch));
                 }
@@ -306,7 +348,7 @@ public class InMemoryFileManager implements JavaFileManager {
         if ((!arguments.useHostSystemClasses() && location.getName().equals(HOST_SYSTEM_CLASS_PATH))
                 || location.equals(StandardLocation.CLASS_PATH)) {
             var result = new ArrayList<JavaFileObject>();
-            result.addAll(LoadClasses.loadClasses(availableClasses, packageName, recurse, classprovider, loggingSwitch));
+            result.addAll(loadClasses(packageName, recurse));
             loggingSwitch.trace(result);
             return result;
         } else {
