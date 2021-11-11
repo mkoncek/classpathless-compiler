@@ -241,6 +241,10 @@ public class CompilerJavac implements ClasspathlessCompiler {
         fileManager.setClassProvider(null);
         fileManager.setLoggingSwitch(null);
 
+        for (var resultFile : result) {
+            loggingSwitch.logln(Level.INFO, "Compilation result: {0}", resultFile.getClassIdentifier().getFullName());
+        }
+
         return result;
     }
 }
