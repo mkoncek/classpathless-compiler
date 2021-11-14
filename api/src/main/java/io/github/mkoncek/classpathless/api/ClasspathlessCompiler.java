@@ -24,7 +24,7 @@ import java.util.Optional;
 public interface ClasspathlessCompiler {
     static class Arguments {
         private boolean useHostSystemClasses = true;
-        private List<String> compilerFlags = new ArrayList<>();
+        private List<String> compilerFlags = Collections.emptyList();
 
         /**
          * @return A copy of the compiler argument strings.
@@ -46,7 +46,7 @@ public interface ClasspathlessCompiler {
          * @return this.
          */
         public Arguments compilerOptions(Collection<String> value) {
-            compilerFlags.addAll(value);
+            compilerFlags = new ArrayList<>(value);
             return this;
         }
 
