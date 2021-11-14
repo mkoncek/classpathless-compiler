@@ -43,7 +43,7 @@ public class InMemoryFileManager implements JavaFileManager {
     private JavaFileManager delegate;
     private ClasspathlessCompiler.Arguments arguments = null;
 
-    private ClassesProvider classprovider = null;
+    private ClassesProvider classesProvider = null;
     private SortedSet<String> availableClasses = null;
     private LoggingSwitch loggingSwitch = null;
 
@@ -63,8 +63,8 @@ public class InMemoryFileManager implements JavaFileManager {
         this.loggingSwitch = loggingSwitch;
     }
 
-    void setClassProvider(ClassesProvider classprovider) {
-        this.classprovider = classprovider;
+    void setClassesProvider(ClassesProvider classesProvider) {
+        this.classesProvider = classesProvider;
     }
 
     void setAvailableClasses(SortedSet<String> availableClasses) {
@@ -285,7 +285,7 @@ public class InMemoryFileManager implements JavaFileManager {
 
             loggingSwitch.logln(Level.FINE, "Loading class from ClassProvider: \"{0}\"", availableClassName);
 
-            result.add(new InMemoryJavaClassFileObject(availableClassName, classprovider, loggingSwitch));
+            result.add(new InMemoryJavaClassFileObject(availableClassName, classesProvider, loggingSwitch));
         }
 
         return result;
@@ -338,7 +338,7 @@ public class InMemoryFileManager implements JavaFileManager {
                 });
                 result.addAll(loadClasses(packageName, recurse));
                 for (String name : hostClassesNames(delegate.list(location, packageName, kinds, recurse))) {
-                    result.add(new InMemoryJavaClassFileObject(name, classprovider, loggingSwitch));
+                    result.add(new InMemoryJavaClassFileObject(name, classesProvider, loggingSwitch));
                 }
                 loggingSwitch.trace(result);
                 return result;

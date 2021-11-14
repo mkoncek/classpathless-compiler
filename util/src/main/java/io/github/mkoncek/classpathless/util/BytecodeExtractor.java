@@ -92,7 +92,7 @@ public class BytecodeExtractor {
         return classes;
     }
 
-    private SortedSet<String> extractNestedClassesFrom(byte[] classFile, ClassesProvider classprovider) {
+    private SortedSet<String> extractNestedClassesFrom(byte[] classFile, ClassesProvider classesProvider) {
         var classFiles = new ArrayList<IdentifiedBytecode>();
         var addedClasses = new ArrayList<ClassIdentifier>();
 
@@ -124,7 +124,7 @@ public class BytecodeExtractor {
         new ClassReader(classFile).accept(visitor, 0);
 
         while (!addedClasses.isEmpty()) {
-            classFiles.addAll(classprovider.getClass(addedClasses.toArray(new ClassIdentifier[0])));
+            classFiles.addAll(classesProvider.getClass(addedClasses.toArray(new ClassIdentifier[0])));
 
             for (var added : addedClasses) {
                 classes.add(added.getFullName());
@@ -229,11 +229,11 @@ public class BytecodeExtractor {
      * Recursively extracts all the nested class names from the initial outer
      * class possibly by pulling more class files from the class provider.
      * @param classFile The file to extract names from.
-     * @param classprovider The provider of nested classes' bytecode.
+     * @param classesProvider The provider of nested classes' bytecode.
      * @return The set of all nested fully qualified class names excluding the initial outer class.
      */
-    public static SortedSet<String> extractNestedClasses(byte[] classFile, ClassesProvider classprovider) {
-        return new BytecodeExtractor().extractNestedClassesFrom(classFile, classprovider);
+    public static SortedSet<String> extractNestedClasses(byte[] classFile, ClassesProvider classesProvider) {
+        return new BytecodeExtractor().extractNestedClassesFrom(classFile, classesProvider);
     }
 
     private class ExtrAnnotationVisitor extends AnnotationVisitor {

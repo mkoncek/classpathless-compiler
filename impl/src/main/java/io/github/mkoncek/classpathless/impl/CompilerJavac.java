@@ -112,7 +112,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
     }
 
     private static void transitiveImport(IdentifiedBytecode bytecode,
-            ClassesProvider classprovider, Set<String> result, LoggingSwitch loggingSwitch) {
+            ClassesProvider classesProvider, Set<String> result, LoggingSwitch loggingSwitch) {
         result.add(bytecode.getClassIdentifier().getFullName());
         for (var typename : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
             if (result.add(typename)) {
@@ -121,14 +121,14 @@ public class CompilerJavac implements ClasspathlessCompiler {
                         nestedPos + 1 < typename.length()) {
                     var nestedTypename = typename.substring(0, nestedPos);
                     if (!result.contains(nestedTypename)) {
-                        var outerBytecodes = classprovider.getClass(new ClassIdentifier(nestedTypename));
+                        var outerBytecodes = classesProvider.getClass(new ClassIdentifier(nestedTypename));
                         if (outerBytecodes.isEmpty()) {
                             loggingSwitch.logln(Level.FINE, "Typename {0} is not a valid class", nestedTypename);
                         } else {
                             result.add(nestedTypename);
                             for (var outerBytecode : outerBytecodes) {
                                 for (var nestedClass : BytecodeExtractor.extractNestedClasses(
-                                        outerBytecode.getFile(), classprovider)) {
+                                        outerBytecode.getFile(), classesProvider)) {
                                     result.add(nestedClass);
                                     loggingSwitch.logln(Level.FINE, "Adding nested class {0}", nestedClass);
                                 }
@@ -142,7 +142,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
     @Override
     public Collection<IdentifiedBytecode> compileClass(
-            ClassesProvider classprovider,
+            ClassesProvider classesProvider,
             Optional<MessagesListener> messagesConsumer,
             IdentifiedSource... javaSourceFiles) {
         var messagesListener = messagesConsumer.orElse(new NullMessagesListener());
@@ -154,11 +154,11 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
         for (var source : javaSourceFiles) {
             compilationUnits.add(new InMemoryJavaSourceFileObject(source));
-            for (var bytecode : classprovider.getClass(source.getClassIdentifier())) {
-                transitiveImport(bytecode, classprovider, availableClasses, loggingSwitch);
-                for (var nestedClass : BytecodeExtractor.extractNestedClasses(bytecode.getFile(), classprovider)) {
-                    for (var nestedBytecode : classprovider.getClass(new ClassIdentifier(nestedClass))) {
-                        transitiveImport(nestedBytecode, classprovider, availableClasses, loggingSwitch);
+            for (var bytecode : classesProvider.getClass(source.getClassIdentifier())) {
+                transitiveImport(bytecode, classesProvider, availableClasses, loggingSwitch);
+                for (var nestedClass : BytecodeExtractor.extractNestedClasses(bytecode.getFile(), classesProvider)) {
+                    for (var nestedBytecode : classesProvider.getClass(new ClassIdentifier(nestedClass))) {
+                        transitiveImport(nestedBytecode, classesProvider, availableClasses, loggingSwitch);
                     }
                 }
             }
@@ -166,7 +166,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
         loggingSwitch.logln(Level.INFO, "Found typenames in the bytecode: {0}", availableClasses);
 
-        for (var additionalClass : classprovider.getClassPathListing()) {
+        for (var additionalClass : classesProvider.getClassPathListing()) {
             if (additionalClass.charAt(0) == '[') {
                 loggingSwitch.logln(Level.FINE, "Ignoring class from classpath listing: {0}", additionalClass);
                 continue;
@@ -184,7 +184,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
         loggingSwitch.logln(Level.INFO, "All available typenames: {0}", availableClasses);
 
-        fileManager.setClassProvider(classprovider);
+        fileManager.setClassesProvider(classesProvider);
         fileManager.setAvailableClasses(availableClasses);
         fileManager.setLoggingSwitch(loggingSwitch);
         fileManager.setArguments(arguments);
@@ -238,7 +238,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
             result.add(new IdentifiedBytecode(getIdentifier(classOutput), content));
         }
 
-        fileManager.setClassProvider(null);
+        fileManager.setClassesProvider(null);
         fileManager.setLoggingSwitch(null);
 
         for (var resultFile : result) {
