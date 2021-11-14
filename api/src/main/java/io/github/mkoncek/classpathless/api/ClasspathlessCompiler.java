@@ -26,19 +26,37 @@ public interface ClasspathlessCompiler {
         private boolean useHostSystemClasses = true;
         private List<String> compilerFlags = new ArrayList<>();
 
-        public boolean useHostSystemClasses() {
-            return useHostSystemClasses;
-        }
-
+        /**
+         * @return A copy of the compiler argument strings.
+         */
         public List<String> compilerOptions() {
             return Collections.unmodifiableList(compilerFlags);
         }
 
+        /**
+         * @return The value of the option.
+         */
+        public boolean useHostSystemClasses() {
+            return useHostSystemClasses;
+        }
+
+        /**
+         * Set flags which will be passed to the compiler.
+         * @param value A collection of compiler flags.
+         * @return this.
+         */
         public Arguments compilerOptions(Collection<String> value) {
             compilerFlags.addAll(value);
             return this;
         }
 
+        /**
+         * Set flag whether or not to use host system classes. System classes
+         * are those provided with the installation of JDK. If set to false, the
+         * compiler will use system classes provided by the provider.
+         * @param value The value of the option.
+         * @return this.
+         */
         public Arguments useHostSystemClasses(boolean value) {
             useHostSystemClasses = value;
             return this;
