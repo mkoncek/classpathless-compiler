@@ -17,6 +17,7 @@ package io.github.mkoncek.classpathless.impl;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -101,7 +102,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
     public CompilerJavac(Arguments arguments) {
         this.fileManager = new InMemoryFileManager(
-                compiler.getStandardFileManager(null, null, null));
+                compiler.getStandardFileManager(null, null, StandardCharsets.UTF_8));
         this.arguments = arguments;
     }
 
