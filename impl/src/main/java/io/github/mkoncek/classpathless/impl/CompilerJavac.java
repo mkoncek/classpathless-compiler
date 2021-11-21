@@ -27,6 +27,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -146,105 +148,112 @@ public class CompilerJavac implements ClasspathlessCompiler {
             Optional<MessagesListener> messagesConsumer,
             IdentifiedSource... javaSourceFiles) {
         var messagesListener = messagesConsumer.orElse(new NullMessagesListener());
-        var loggingSwitch = new LoggingSwitch();
-        loggingSwitch.setMessagesListener(messagesListener);
+        try (var loggingSwitch = new LoggingSwitch()) {
+            loggingSwitch.setMessagesListener(messagesListener);
 
-        Collection<InMemoryJavaSourceFileObject> compilationUnits = new ArrayList<>();
-        var availableClasses = new TreeSet<String>();
+            loggingSwitch.logln(Level.INFO, "Starting a compilation task of sources: {0}",
+                    Stream.of(javaSourceFiles).map(jsf -> jsf.getClassIdentifier().getFullName())
+                    .collect(Collectors.toUnmodifiableList()));
 
-        for (var source : javaSourceFiles) {
-            compilationUnits.add(new InMemoryJavaSourceFileObject(source));
-            for (var bytecode : classesProvider.getClass(source.getClassIdentifier())) {
-                transitiveImport(bytecode, classesProvider, availableClasses, loggingSwitch);
-                for (var nestedClass : BytecodeExtractor.extractNestedClasses(bytecode.getFile(), classesProvider)) {
-                    for (var nestedBytecode : classesProvider.getClass(new ClassIdentifier(nestedClass))) {
-                        transitiveImport(nestedBytecode, classesProvider, availableClasses, loggingSwitch);
-                    }
-                }
-            }
-        }
+            Collection<InMemoryJavaSourceFileObject> compilationUnits = new ArrayList<>();
+            var availableClasses = new TreeSet<String>();
 
-        loggingSwitch.logln(Level.INFO, "Found typenames in the bytecode: {0}", availableClasses);
-
-        for (var additionalClass : classesProvider.getClassPathListing()) {
-            if (additionalClass.charAt(0) == '[') {
-                loggingSwitch.logln(Level.FINE, "Ignoring class from classpath listing: {0}", additionalClass);
-                continue;
-            }
-            if (additionalClass.contains("/")) {
-                loggingSwitch.logln(Level.FINE, "Ignoring lambda class from classpath listing: {0}", additionalClass);
-                continue;
-            }
-            availableClasses.add(additionalClass);
-        }
-
-        // Workaround to expose this annotation even though it only has SOURCE
-        // retention. The decompilers use it anyway.
-        availableClasses.add("java.lang.Override");
-
-        loggingSwitch.logln(Level.INFO, "All available typenames: {0}", availableClasses);
-
-        fileManager.setClassesProvider(classesProvider);
-        fileManager.setAvailableClasses(availableClasses);
-        fileManager.setLoggingSwitch(loggingSwitch);
-        fileManager.setArguments(arguments);
-
-        for (boolean sourcesChanged = true; sourcesChanged;) {
-            sourcesChanged = false;
-            var diagnosticListener = new DiagnosticToMessagesListener(messagesListener);
-
-            if (compiler.getTask(null, fileManager, diagnosticListener,
-                    arguments.compilerOptions(), null, compilationUnits).call()) {
-                break;
-            }
-
-            messagesListener.addMessage(Level.SEVERE, "Compilation failed");
-
-            for (var entry : diagnosticListener.compilationErrors.entrySet()) {
-                for (var cu : compilationUnits) {
-                    if (entry.getKey().equals(cu.getClassIdentifier())) {
-                        for (var postprocessor : postprocessors) {
-                            var result = postprocessor.postprocess(
-                                    cu.getIdentifiedSource(), entry.getValue());
-                            if (result.changed) {
-                                sourcesChanged = true;
-                                messagesListener.addMessage(Level.INFO,
-                                        "SourcePostprocessor: reloading the source code of {0}",
-                                        cu.getClassIdentifier().getFullName());
-                                cu.setSource(result.source.getSourceCode());
-                            }
+            for (var source : javaSourceFiles) {
+                compilationUnits.add(new InMemoryJavaSourceFileObject(source));
+                for (var bytecode : classesProvider.getClass(source.getClassIdentifier())) {
+                    transitiveImport(bytecode, classesProvider, availableClasses, loggingSwitch);
+                    for (var nestedClass : BytecodeExtractor.extractNestedClasses(bytecode.getFile(), classesProvider)) {
+                        for (var nestedBytecode : classesProvider.getClass(new ClassIdentifier(nestedClass))) {
+                            transitiveImport(nestedBytecode, classesProvider, availableClasses, loggingSwitch);
                         }
                     }
                 }
             }
 
-            if (!sourcesChanged) {
-                throw new RuntimeException("Could not compile file");
+            loggingSwitch.logln(Level.INFO, "Found typenames in the bytecode: {0}", availableClasses);
+
+            for (var additionalClass : classesProvider.getClassPathListing()) {
+                if (additionalClass.charAt(0) == '[') {
+                    loggingSwitch.logln(Level.FINE, "Ignoring class from classpath listing: {0}", additionalClass);
+                    continue;
+                }
+                if (additionalClass.contains("/")) {
+                    loggingSwitch.logln(Level.FINE, "Ignoring lambda class from classpath listing: {0}", additionalClass);
+                    continue;
+                }
+                availableClasses.add(additionalClass);
             }
-        }
 
-        var result = new ArrayList<IdentifiedBytecode>();
-        var classOutputs = new ArrayList<JavaFileObject>();
+            // Workaround to expose this annotation even though it only has SOURCE
+            // retention. The decompilers use it anyway.
+            availableClasses.add("java.lang.Override");
 
-        fileManager.clearAndGetOutput(classOutputs);
+            loggingSwitch.logln(Level.INFO, "All available typenames: {0}", availableClasses);
 
-        for (final var classOutput : classOutputs) {
-            byte[] content;
-            try {
-                content = classOutput.openInputStream().readAllBytes();
-            } catch (IOException ex) {
-                throw new UncheckedIOException(ex);
+            fileManager.setClassesProvider(classesProvider);
+            fileManager.setAvailableClasses(availableClasses);
+            fileManager.setLoggingSwitch(loggingSwitch);
+            fileManager.setArguments(arguments);
+
+            for (boolean sourcesChanged = true; sourcesChanged;) {
+                sourcesChanged = false;
+                var diagnosticListener = new DiagnosticToMessagesListener(messagesListener);
+
+                if (compiler.getTask(null, fileManager, diagnosticListener,
+                        arguments.compilerOptions(), null, compilationUnits).call()) {
+                    break;
+                }
+
+                messagesListener.addMessage(Level.SEVERE, "Compilation failed");
+
+                for (var entry : diagnosticListener.compilationErrors.entrySet()) {
+                    for (var cu : compilationUnits) {
+                        if (entry.getKey().equals(cu.getClassIdentifier())) {
+                            for (var postprocessor : postprocessors) {
+                                var result = postprocessor.postprocess(
+                                        cu.getIdentifiedSource(), entry.getValue());
+                                if (result.changed) {
+                                    sourcesChanged = true;
+                                    messagesListener.addMessage(Level.INFO,
+                                            "SourcePostprocessor: reloading the source code of {0}",
+                                            cu.getClassIdentifier().getFullName());
+                                    cu.setSource(result.source.getSourceCode());
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!sourcesChanged) {
+                    throw new RuntimeException("Could not compile file");
+                }
             }
-            result.add(new IdentifiedBytecode(getIdentifier(classOutput), content));
+
+            var result = new ArrayList<IdentifiedBytecode>();
+            var classOutputs = new ArrayList<JavaFileObject>();
+
+            fileManager.clearAndGetOutput(classOutputs);
+
+            for (final var classOutput : classOutputs) {
+                byte[] content;
+                try {
+                    content = classOutput.openInputStream().readAllBytes();
+                } catch (IOException ex) {
+                    throw new UncheckedIOException(ex);
+                }
+                result.add(new IdentifiedBytecode(getIdentifier(classOutput), content));
+            }
+
+            fileManager.setClassesProvider(null);
+            fileManager.setLoggingSwitch(null);
+
+            for (var resultFile : result) {
+                loggingSwitch.logln(Level.INFO, "Compilation result: {0}", resultFile.getClassIdentifier().getFullName());
+            }
+
+            return result;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
-
-        fileManager.setClassesProvider(null);
-        fileManager.setLoggingSwitch(null);
-
-        for (var resultFile : result) {
-            loggingSwitch.logln(Level.INFO, "Compilation result: {0}", resultFile.getClassIdentifier().getFullName());
-        }
-
-        return result;
     }
 }

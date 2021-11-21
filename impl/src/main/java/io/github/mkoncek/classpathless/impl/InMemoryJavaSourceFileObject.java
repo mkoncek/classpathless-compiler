@@ -76,6 +76,7 @@ public class InMemoryJavaSourceFileObject extends IdentifiedJavaFileObject {
 
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+        // This method is called by the compiler to obtain the source code content
         return source;
     }
 }

@@ -28,11 +28,19 @@ import java.util.stream.Stream;
 
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
-public class LoggingSwitch {
+public class LoggingSwitch implements AutoCloseable {
     PrintStream printer;
     MessagesListener listener;
     private boolean tracing = false;
     private java.util.logging.Level logLevel = Level.OFF;
+
+    @Override
+    public void close() throws Exception {
+        printer.flush();
+        if (printer != System.err) {
+            printer.close();
+        }
+    }
 
     public static class Null extends LoggingSwitch {
         public Null() {
@@ -40,7 +48,7 @@ public class LoggingSwitch {
         }
     }
 
-    public LoggingSwitch(PrintStream printer) {
+    private LoggingSwitch(PrintStream printer) {
         this.printer = printer;
     }
 
@@ -53,10 +61,8 @@ public class LoggingSwitch {
                 printer = System.err;
             } else {
                 // DO NOT USE try-with-resources, we do not want to close the stream
-                FileOutputStream os;
                 try {
-                    // TODO not closed if any exception happens
-                    os = new FileOutputStream(Paths.get(logging).toFile(), true);
+                    var os = new FileOutputStream(Paths.get(logging).toFile(), true);
                     printer = new PrintStream(os, true, StandardCharsets.UTF_8);
                 } catch (IOException ex) {
                     throw new UncheckedIOException(ex);
@@ -117,7 +123,7 @@ public class LoggingSwitch {
         }
     }
 
-    public void log(boolean traced, java.util.logging.Level level, String format, Object... args) {
+    private void log(boolean traced, java.util.logging.Level level, String format, Object... args) {
         // TODO contact JRD
         /*
         if (!traced && listener != null) {
@@ -137,7 +143,7 @@ public class LoggingSwitch {
         }
     }
 
-    public void logln(boolean traced, java.util.logging.Level level, String format, Object... args) {
+    private void logln(boolean traced, java.util.logging.Level level, String format, Object... args) {
         log(traced, level, format + System.lineSeparator(), args);
     }
 
