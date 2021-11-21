@@ -98,7 +98,9 @@ public class LoggingSwitch implements AutoCloseable {
     }
 
     public void setMessagesListener(MessagesListener listener) {
-        this.listener = listener;
+        if (System.getProperty("io.github.mkoncek.cplc.log-to-provider") != null) {
+            this.listener = listener;
+        }
     }
 
     public void setTracing(boolean value) {
@@ -124,17 +126,8 @@ public class LoggingSwitch implements AutoCloseable {
     }
 
     private void log(boolean traced, java.util.logging.Level level, String format, Object... args) {
-        // TODO contact JRD
-        /*
         if (!traced && listener != null) {
             listener.addMessage(level, format, args);
-        }
-         */
-
-        // TODO delete this line, this is here just to silence spotbugs
-        {
-            var ls = listener;
-            listener = null;
         }
 
         if (logLevel != Level.OFF && level.intValue() >= logLevel.intValue()) {
