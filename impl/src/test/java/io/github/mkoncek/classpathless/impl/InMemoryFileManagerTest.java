@@ -41,7 +41,7 @@ public class InMemoryFileManagerTest {
 
     @Test
     void testListNamedPackage() throws IOException {
-        var fm = initFM(Arrays.asList("a$a", "a.a", "a.a.a", "a.b$a", "a.b.a", "a.b.b", "a.ba", "aa"));
+        var fm = initFM(Arrays.asList("a.a", "a.a.a", "a.b$a", "a.b.a", "a.b.b", "a.ba"));
 
         {
             var it = fm.list(StandardLocation.CLASS_PATH, "a", Set.of(Kind.CLASS), false).iterator();
