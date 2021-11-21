@@ -49,8 +49,6 @@ public class InMemoryFileManager implements JavaFileManager {
 
     private ArrayList<InMemoryJavaClassFileObject> classOutputs = new ArrayList<>();
 
-    // The Location name for system classes in Java < 9
-    private static final String HOST_SYSTEM_CLASS_PATH = "PLATFORM_CLASS_PATH";
     // The Location name for system classes in Java >= 9
     private static final String HOST_SYSTEM_MODULES = "SYSTEM_MODULES[java.base]";
 
@@ -323,7 +321,7 @@ public class InMemoryFileManager implements JavaFileManager {
         loggingSwitch.trace(this, "list", location, packageName, kinds, recurse);
 
         if (!arguments.useHostSystemClasses()) {
-            if (location.getName().equals(HOST_SYSTEM_CLASS_PATH)) {
+            if (location.equals(StandardLocation.PLATFORM_CLASS_PATH)) {
                 // Add all the host visible names to our set of available classes
                 // but do not return it, the compiler will later ask for the same
                 // package name with the location CLASS_PATH, then we return all.
@@ -349,7 +347,7 @@ public class InMemoryFileManager implements JavaFileManager {
             }
         }
 
-        if ((!arguments.useHostSystemClasses() && location.getName().equals(HOST_SYSTEM_CLASS_PATH))
+        if ((!arguments.useHostSystemClasses() && location.equals(StandardLocation.PLATFORM_CLASS_PATH))
                 || location.equals(StandardLocation.CLASS_PATH)) {
             var result = new ArrayList<JavaFileObject>();
             result.addAll(loadClasses(packageName, recurse));
