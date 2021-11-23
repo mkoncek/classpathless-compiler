@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.logging.Level;
 
 import javax.tools.FileObject;
@@ -326,7 +325,9 @@ public class InMemoryFileManager implements JavaFileManager {
                 // but do not return it, the compiler will later ask for the same
                 // package name with the location CLASS_PATH, then we return all.
                 for (String name : hostClassesNames(delegate.list(location, packageName, kinds, recurse))) {
-                    availableClasses.add(name);
+                    if (availableClasses.add(name)) {
+                        loggingSwitch.logln(Level.FINE, "Loading system class from ClassProvider: \"{0}\"", name);
+                    }
                 }
                 var result = Collections.<JavaFileObject>emptyList();
                 loggingSwitch.trace(result);
@@ -335,22 +336,19 @@ public class InMemoryFileManager implements JavaFileManager {
                 // In this case we need to return the whole set of classes
                 // because the compiler will not ask for host classes with
                 // Location == CLASS_PATH, due to different nature of modules
-                var result = new TreeSet<JavaFileObject>((var lhs, var rhs) -> {
-                    return ((InMemoryJavaClassFileObject)(lhs)).getClassIdentifier().compareTo(((InMemoryJavaClassFileObject)(rhs)).getClassIdentifier());
-                });
-                result.addAll(loadClasses(packageName, recurse));
                 for (String name : hostClassesNames(delegate.list(location, packageName, kinds, recurse))) {
-                    result.add(new InMemoryJavaClassFileObject(name, classesProvider, loggingSwitch));
+                    if (availableClasses.add(name)) {
+                        loggingSwitch.logln(Level.FINE, "Loading system class from ClassProvider: \"{0}\"", name);
+                    }
                 }
+                var result = new ArrayList<JavaFileObject>(loadClasses(packageName, recurse));
                 loggingSwitch.trace(result);
                 return result;
             }
         }
 
-        if ((!arguments.useHostSystemClasses() && location.equals(StandardLocation.PLATFORM_CLASS_PATH))
-                || location.equals(StandardLocation.CLASS_PATH)) {
-            var result = new ArrayList<JavaFileObject>();
-            result.addAll(loadClasses(packageName, recurse));
+        if (location.equals(StandardLocation.CLASS_PATH)) {
+            var result = new ArrayList<JavaFileObject>(loadClasses(packageName, recurse));
             loggingSwitch.trace(result);
             return result;
         } else {
