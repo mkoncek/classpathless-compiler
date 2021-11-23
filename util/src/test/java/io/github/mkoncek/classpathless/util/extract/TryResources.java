@@ -17,7 +17,7 @@ package io.github.mkoncek.classpathless.util.extract;
 
 public class TryResources {
     public static void main(String[] args) {
-        try (var dc = new DummyCloseable()) {
+        try (AutoCloseable dc = new DummyCloseable()) {
         } catch (Exception ex) {
         }
     }

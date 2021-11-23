@@ -17,6 +17,6 @@ package io.github.mkoncek.classpathless.util.extract;
 
 public class NewArray {
     public static void main(String[] args) {
-        var array = new Dummy[1];
+        Object array = new Dummy[1];
     }
 }

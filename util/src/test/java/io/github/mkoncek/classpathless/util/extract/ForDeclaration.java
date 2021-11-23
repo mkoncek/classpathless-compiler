@@ -17,7 +17,7 @@ package io.github.mkoncek.classpathless.util.extract;
 
 public class ForDeclaration {
     public static void main(String[] args) {
-        for (var d = new Dummy(); true;) {
+        for (Object d = new Dummy(); true;) {
         }
     }
 }

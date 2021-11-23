@@ -17,7 +17,7 @@ package io.github.mkoncek.classpathless.util.extract;
 
 public class Anonymous {
     public static void main(String[] args) {
-        var hello = new DummyInterface() {
+        Object hello = new DummyInterface() {
             @Override
             public void f() {
                 System.out.println(Integer.valueOf(0));
