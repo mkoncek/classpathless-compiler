@@ -39,10 +39,6 @@ import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 /**
  * A utility class to extract useful information fomr class files like typenames
  * methods, fields.
- *
- * @implNote Function `normalize` was originally supposed to extract types from
- * type descriptors. It is however also used on raw types obtained by calls to
- * `Type.getInternalName()`, this causes no trouble so far.
  */
 public class BytecodeExtractor {
     private static final int CURRENT_ASM_OPCODE = org.objectweb.asm.Opcodes.ASM9;
@@ -53,6 +49,9 @@ public class BytecodeExtractor {
     /**
      * Extract type fully qualified type name from a type or descriptor. This
      * function is not used on signatures which may contain formal parameters.
+     * @implNote This function was originally meant to extract types from
+     * type descriptors. It is however also used on raw types obtained by calls to
+     * `Type.getInternalName()`, this causes no trouble so far.
      * @param value Raw type descriptor or just the type name.
      * @return The simple string representing the fully-qualified name of the class
      */
@@ -72,8 +71,8 @@ public class BytecodeExtractor {
     /**
      * Function for extracting the inner elements of formal parameters, i. e.
      * those contained in <> parentheses. This function does not do full signature
-     * parsing, just a simple search. The types not catched by the regular expression
-     * should be already catched by other visitors.
+     * parsing, just a simple search. The types not caught by the regular expression
+     * should be already caught by other visitors.
      * For reference about signatures, see:
      * https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.3
      */
@@ -242,8 +241,7 @@ public class BytecodeExtractor {
         }
 
         @Override
-        public AnnotationVisitor visitAnnotation(String name,
-                String descriptor) {
+        public AnnotationVisitor visitAnnotation(String name, String descriptor) {
             classes.add(normalize(descriptor));
             return this;
         }
@@ -260,8 +258,7 @@ public class BytecodeExtractor {
         }
 
         @Override
-        public AnnotationVisitor visitAnnotation(String descriptor,
-                boolean visible) {
+        public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
             classes.add(normalize(descriptor));
             return new ExtrAnnotationVisitor();
         }
@@ -317,14 +314,12 @@ public class BytecodeExtractor {
         }
 
         @Override
-        public void visitMultiANewArrayInsn(String descriptor,
-                int numDimensions) {
+        public void visitMultiANewArrayInsn(String descriptor, int numDimensions) {
             classes.add(normalize(descriptor));
         }
 
         @Override
-        public void visitFieldInsn(int opcode, String owner,
-                String name, String descriptor) {
+        public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
             classes.add(normalize(owner));
         }
 
@@ -349,8 +344,7 @@ public class BytecodeExtractor {
         }
 
         @Override
-        public void visitTryCatchBlock(Label start, Label end,
-                Label handler, String type) {
+        public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
             if (type != null) {
                 classes.add(normalize(type));
             }
@@ -363,8 +357,7 @@ public class BytecodeExtractor {
         }
 
         @Override
-        public AnnotationVisitor visitAnnotation(String descriptor,
-                boolean visible) {
+        public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
             classes.add(normalize(descriptor));
             return new ExtrAnnotationVisitor();
         }
@@ -419,20 +412,17 @@ public class BytecodeExtractor {
         }
 
         @Override
-        public void visitOuterClass(String owner, String name,
-                String descriptor) {
+        public void visitOuterClass(String owner, String name, String descriptor) {
             classes.add(normalize(owner));
         }
 
         @Override
-        public void visitInnerClass(String name, String outerName,
-                String innerName, int access) {
+        public void visitInnerClass(String name, String outerName, String innerName, int access) {
             classes.add(normalize(name));
         }
 
         @Override
-        public AnnotationVisitor visitAnnotation(String descriptor,
-                boolean visible) {
+        public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
             classes.add(normalize(descriptor));
             return new ExtrAnnotationVisitor();
         }
