@@ -185,10 +185,6 @@ public class CompilerJavac implements ClasspathlessCompiler {
                 availableClasses.add(additionalClass);
             }
 
-            // Workaround to expose this annotation even though it only has SOURCE
-            // retention. The decompilers use it anyway.
-            availableClasses.add("java.lang.Override");
-
             loggingSwitch.logln(Level.INFO, "All available typenames: {0}", availableClasses);
 
             fileManager.setClassesProvider(classesProvider);
