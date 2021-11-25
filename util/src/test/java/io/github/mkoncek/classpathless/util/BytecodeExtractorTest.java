@@ -53,6 +53,7 @@ public class BytecodeExtractorTest {
             assertFalse(type.contains(";"), type);
             assertFalse(type.contains("()"), type);
             assertFalse(type.startsWith("Ljava."), type);
+            assertNotEquals("V", type);
         }
     }
 
@@ -116,7 +117,6 @@ public class BytecodeExtractorTest {
             var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
             genericCheck(result);
             assertTrue(result.contains(DUMMY_NAME));
-            assertTrue(result.contains("I"));
         }
     }
 

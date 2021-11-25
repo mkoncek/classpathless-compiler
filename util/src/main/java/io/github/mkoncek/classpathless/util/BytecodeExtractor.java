@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -30,7 +29,6 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.TypePath;
 
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
@@ -46,30 +44,22 @@ public class BytecodeExtractor {
 
     private SortedSet<String> classes = new TreeSet<>();
 
-    /**
-     * Extract type fully qualified type name from a type or descriptor. This
-     * function is not used on signatures which may contain formal parameters.
-     * @implNote This function was originally meant to extract types from
-     * type descriptors. It is however also used on raw types obtained by calls to
-     * `Type.getInternalName()`, this causes no trouble so far.
-     * @param value Raw type descriptor or just the type name.
-     * @return The simple string representing the fully-qualified name of the class
-     */
-    private static String normalize(String value) {
-        assert(!value.startsWith("("));
-        int begin = 0;
-        while (begin < value.length() && value.charAt(begin) == '[') {
-            ++begin;
-        }
-        if (value.charAt(begin) == 'L' && value.charAt(value.length() - 1) == ';') {
-            value = value.substring(0, value.length() - 1);
-            ++begin;
-        }
-        return value.substring(begin).replace('/', '.');
+    private static String dot(String value) {
+        return value.replace('/', '.');
     }
 
     /**
-     * Function for extracting the inner elements of formal parameters, i. e.
+     * Function for extracting the type names from descriptors.
+     * @implNote Implementation is currently same as with signatures, but we
+     * keep it as a separate function.
+     * https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.3
+     */
+    private static void extractDescriptor(String descriptor, Collection<String> result) {
+        extractSignature(descriptor, result);
+    }
+
+    /**
+     * Function for extracting the contents of formal parameters, i. e.
      * those contained in <> parentheses. This function does not do full signature
      * parsing, just a simple search. The types not caught by the regular expression
      * should be already caught by other visitors.
@@ -81,7 +71,7 @@ public class BytecodeExtractor {
         while (matcher.find()) {
             var found = matcher.group(1);
             if (found != null) {
-                result.add(found.replace('/', '.'));
+                result.add(dot(found));
             }
         }
     }
@@ -105,7 +95,7 @@ public class BytecodeExtractor {
             public void visitInnerClass(String name, String outerName,
                     String innerName, int access) {
                 if (outerName == null || className[0].equals(outerName)) {
-                    classes.add(name.replace('/', '.'));
+                    classes.add(dot(name));
                 }
             }
         }, 0);
@@ -183,7 +173,7 @@ public class BytecodeExtractor {
             public void visit(int version, int access, String name,
                     String signature, String superName, String[] interfaces) {
                 for (var iName : interfaces) {
-                    result.add(iName.replace('/', '.'));
+                    result.add(dot(iName));
                 }
             }
         }, 0);
@@ -203,7 +193,7 @@ public class BytecodeExtractor {
             public void visit(int version, int access, String name,
                     String signature, String superName, String[] interfaces) {
                 if (superName != null) {
-                    result[0] = superName.replace('/', '.');
+                    result[0] = dot(superName);
                 }
             }
         }, 0);
@@ -232,23 +222,18 @@ public class BytecodeExtractor {
             public void visitInnerClass(String name, String outerName, String innerName, int access) {
                 if (result[1].equals(name)) {
                     if (outerName != null) {
-                        result[0] = outerName.replace('/', '.');
+                        result[0] = dot(outerName);
                     }
                 }
             }
 
             @Override
             public void visitOuterClass(String owner, String name, String descriptor) {
-                result[0] = owner.replace('/', '.');
+                result[0] = dot(owner);
             }
         }, 0);
         return Optional.ofNullable(result[0]);
     }
-
-    Supplier<Integer> i = () -> {
-        class Lol {};
-        return 5;
-    };
 
     /**
      * Extracts all directly nested class names from the initial outer class.
@@ -287,7 +272,7 @@ public class BytecodeExtractor {
             @Override
             public void visit(int version, int access, String name,
                     String signature, String superName, String[] interfaces) {
-                result.add(name.replace('/', '.'));
+                result.add(dot(name));
             }
         }, 0);
         return result;
@@ -300,13 +285,13 @@ public class BytecodeExtractor {
 
         @Override
         public AnnotationVisitor visitAnnotation(String name, String descriptor) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             return this;
         }
 
         @Override
         public void visitEnum(String name, String descriptor, String value) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
         }
     }
 
@@ -317,14 +302,14 @@ public class BytecodeExtractor {
 
         @Override
         public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             return new ExtrAnnotationVisitor();
         }
 
         @Override
         public AnnotationVisitor visitParameterAnnotation(int parameter,
                 String descriptor, boolean visible) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             return new ExtrAnnotationVisitor();
         }
 
@@ -332,40 +317,40 @@ public class BytecodeExtractor {
         public AnnotationVisitor visitLocalVariableAnnotation(int typeRef,
                 TypePath typePath, Label[] start, Label[] end, int[] index,
                 String descriptor, boolean visible) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             return new ExtrAnnotationVisitor();
         }
 
         @Override
         public AnnotationVisitor visitTypeAnnotation(int typeRef,
                 TypePath typePath, String descriptor, boolean visible) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             return new ExtrAnnotationVisitor();
         }
 
         @Override
         public AnnotationVisitor visitTryCatchAnnotation(int typeRef,
                 TypePath typePath, String descriptor, boolean visible) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             return new ExtrAnnotationVisitor();
         }
 
         @Override
         public AnnotationVisitor visitInsnAnnotation(int typeRef,
                 TypePath typePath, String descriptor, boolean visible) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             return new ExtrAnnotationVisitor();
         }
 
         @Override
         public void visitTypeInsn(int opcode, String type) {
-            classes.add(normalize(type));
+            classes.add(dot(type));
         }
 
         @Override
         public void visitLocalVariable(String name, String descriptor,
                 String signature, Label start, Label end, int index) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             if (signature != null) {
                 extractSignature(signature, classes);
             }
@@ -373,38 +358,33 @@ public class BytecodeExtractor {
 
         @Override
         public void visitMultiANewArrayInsn(String descriptor, int numDimensions) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
         }
 
         @Override
         public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
-            classes.add(normalize(owner));
+            classes.add(dot(owner));
+            extractDescriptor(descriptor, classes);
         }
 
         @Override
         public void visitMethodInsn(int opcode, String owner,
                 String name, String descriptor, boolean isInterface) {
-            classes.add(normalize(owner));
-            classes.add(normalize(Type.getType(descriptor).getReturnType().getInternalName()));
-            for (var t : Type.getType(descriptor).getArgumentTypes()) {
-                classes.add(normalize(t.getInternalName()));
-            }
+            classes.add(dot(owner));
+            extractDescriptor(descriptor, classes);
         }
 
         @Override
         public void visitInvokeDynamicInsn(String name,
                 String descriptor, Handle bootstrapMethodHandle,
                 Object... bootstrapMethodArguments) {
-            classes.add(normalize(Type.getType(descriptor).getReturnType().getInternalName()));
-            for (var t : Type.getType(descriptor).getArgumentTypes()) {
-                classes.add(normalize(t.getInternalName()));
-            }
+            extractDescriptor(descriptor, classes);
         }
 
         @Override
         public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
             if (type != null) {
-                classes.add(normalize(type));
+                classes.add(dot(type));
             }
         }
     }
@@ -416,7 +396,7 @@ public class BytecodeExtractor {
 
         @Override
         public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             return new ExtrAnnotationVisitor();
         }
     }
@@ -429,22 +409,22 @@ public class BytecodeExtractor {
         @Override
         public void visit(int version, int access, String name,
                 String signature, String superName, String[] interfaces) {
+            classes.add(dot(name));
             if (signature != null) {
                 extractSignature(signature, classes);
             }
-            classes.add(name.replace('/', '.'));
             if (superName != null) {
-                classes.add(superName.replace('/', '.'));
+                classes.add(dot(superName));
             }
-            for (var iName : interfaces) {
-                classes.add(iName.replace('/', '.'));
+            for (var intrfc : interfaces) {
+                classes.add(dot(intrfc));
             }
         }
 
         @Override
         public FieldVisitor visitField(int access, String name,
                 String descriptor, String signature, Object value) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             if (signature != null) {
                 extractSignature(signature, classes);
             }
@@ -454,16 +434,13 @@ public class BytecodeExtractor {
         @Override
         public MethodVisitor visitMethod(int access, String name,
                 String descriptor, String signature, String[] exceptions) {
-            classes.add(normalize(Type.getType(descriptor).getReturnType().getInternalName()));
-            for (var t : Type.getType(descriptor).getArgumentTypes()) {
-                classes.add(normalize(t.getInternalName()));
-            }
+            extractDescriptor(descriptor, classes);
             if (signature != null) {
                 extractSignature(signature, classes);
             }
             if (exceptions != null) {
                 for (var ex : exceptions) {
-                    classes.add(ex.replace('/', '.'));
+                    classes.add(dot(ex));
                 }
             }
             return new ExtrMethodVisitor();
@@ -471,27 +448,30 @@ public class BytecodeExtractor {
 
         @Override
         public void visitOuterClass(String owner, String name, String descriptor) {
-            classes.add(normalize(owner));
+            classes.add(dot(owner));
+            if (descriptor != null) {
+                extractDescriptor(descriptor, classes);
+            }
         }
 
         @Override
         public void visitInnerClass(String name, String outerName, String innerName, int access) {
-            classes.add(normalize(name));
+            classes.add(dot(name));
             if (outerName != null) {
-                classes.add(normalize(outerName));
+                classes.add(dot(outerName));
             }
         }
 
         @Override
         public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             return new ExtrAnnotationVisitor();
         }
 
         @Override
         public AnnotationVisitor visitTypeAnnotation(int typeRef,
                 TypePath typePath, String descriptor, boolean visible) {
-            classes.add(normalize(descriptor));
+            extractDescriptor(descriptor, classes);
             return new ExtrAnnotationVisitor();
         }
     }
