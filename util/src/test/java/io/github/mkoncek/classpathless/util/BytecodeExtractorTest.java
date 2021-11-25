@@ -455,14 +455,9 @@ public class BytecodeExtractorTest {
 
     private static class FSProvider implements ClassesProvider {
         @Override
-        public Collection<IdentifiedBytecode> getClass(
-                ClassIdentifier... names) {
+        public Collection<IdentifiedBytecode> getClass(ClassIdentifier... names) {
             var result = new ArrayList<IdentifiedBytecode>();
             for (var name : names) {
-                // This is to ensure that we are not requesting the outer class
-                // bytecode again
-                assertTrue(name.getFullName().contains("$"));
-
                 var filename = "target/test-classes/" + name.getFullName().replace('.', '/') + ".class";
                 try (var is = new FileInputStream(filename)) {
                     result.add(new IdentifiedBytecode(name, is.readAllBytes()));
@@ -580,6 +575,47 @@ public class BytecodeExtractorTest {
             assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiAnonymous$1$1"));
             assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiAnonymous$1$1$1"));
             assertTrue(result.size() == 3);
+        }
+    }
+
+    @Test
+    void testextractFullClassGroup1() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/MultiNested$Nested1$Nested11$Nested111.class")) {
+            var result = BytecodeExtractor.extractFullClassGroup(is.readAllBytes(), new FSProvider());
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested11"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested11$Nested111"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested11$Nested112"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$1Method"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$2Method"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$3Method"));
+            assertTrue(result.size() == 11);
+        }
+    }
+
+    @Test
+    void testextractFullClassGroup2() throws IOException {
+        for (int i = 1; i <= 3; ++i) {
+            try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/MultiNested$Nested1$Nested12$Nested121$Nested1211$"
+                    + String.valueOf(i) + "Method.class")) {
+                var result = BytecodeExtractor.extractFullClassGroup(is.readAllBytes(), new FSProvider());
+                assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested"));
+                assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1"));
+                assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested11"));
+                assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested11$Nested111"));
+                assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested11$Nested112"));
+                assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12"));
+                assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121"));
+                assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211"));
+                assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$1Method"));
+                assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$2Method"));
+                assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$3Method"));
+                assertTrue(result.size() == 11);
+            }
         }
     }
 }

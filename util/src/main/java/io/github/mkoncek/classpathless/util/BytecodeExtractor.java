@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -91,7 +92,8 @@ public class BytecodeExtractor {
         return classes;
     }
 
-    private SortedSet<String> extractNestedClassesFrom(byte[] classFile, ClassesProvider classesProvider) {
+    private SortedSet<String> extractNestedClassesFrom(byte[] classFile,
+            ClassesProvider classesProvider) {
         var classFiles = new ArrayList<IdentifiedBytecode>();
         var addedClasses = new ArrayList<ClassIdentifier>();
 
@@ -225,6 +227,46 @@ public class BytecodeExtractor {
     }
 
     /**
+     * Extracts the name of the outer class of the provided class.
+     * @implNote We first obtain the name of the class itself and then deduce
+     * when to set the name of the outer class. The method "visitInnerClass" is
+     * invoked on both this class as well as its own nested members. Otherwise
+     * "visitOuterClass" takes care of the case when the class is inside a method.
+     * @param classFile The file to extract the name from.
+     * @return The name of the super class.
+     */
+    public static Optional<String> extractOuterClass(byte[] classFile) {
+        var result = new String[2];
+        new ClassReader(classFile).accept(new ClassVisitor(CURRENT_ASM_OPCODE) {
+            @Override
+            public void visit(int version, int access, String name,
+                    String signature, String superName, String[] interfaces) {
+                result[1] = name;
+            }
+
+            @Override
+            public void visitInnerClass(String name, String outerName, String innerName, int access) {
+                if (result[1].equals(name)) {
+                    if (outerName != null) {
+                        result[0] = outerName.replace('/', '.');
+                    }
+                }
+            }
+
+            @Override
+            public void visitOuterClass(String owner, String name, String descriptor) {
+                result[0] = owner.replace('/', '.');
+            }
+        }, 0);
+        return Optional.ofNullable(result[0]);
+    }
+
+    Supplier<Integer> i = () -> {
+        class Lol {};
+        return 5;
+    };
+
+    /**
      * Recursively extracts all the nested class names from the initial outer
      * class possibly by pulling more class files from the class provider.
      * @param classFile The file to extract names from.
@@ -233,6 +275,29 @@ public class BytecodeExtractor {
      */
     public static SortedSet<String> extractNestedClasses(byte[] classFile, ClassesProvider classesProvider) {
         return new BytecodeExtractor().extractNestedClassesFrom(classFile, classesProvider);
+    }
+
+    /**
+     * Walk up to outermost class and return all its transitively nested classes.
+     * @param classFile The file to extract names from.
+     * @param classesProvider The provider of nested classes' bytecode.
+     * @return The set of all fully qualified class names of the nest to which this class belongs.
+     */
+    public static SortedSet<String> extractFullClassGroup(byte[] classFile, ClassesProvider classesProvider) {
+        Optional<String> outermostClass;
+        while ((outermostClass = extractOuterClass(classFile)).isPresent()) {
+            classFile = classesProvider.getClass(new ClassIdentifier(outermostClass.get()))
+                    .iterator().next().getFile();
+        }
+        var result = extractNestedClasses(classFile, classesProvider);
+        new ClassReader(classFile).accept(new ClassVisitor(CURRENT_ASM_OPCODE) {
+            @Override
+            public void visit(int version, int access, String name,
+                    String signature, String superName, String[] interfaces) {
+                result.add(name.replace('/', '.'));
+            }
+        }, 0);
+        return result;
     }
 
     private class ExtrAnnotationVisitor extends AnnotationVisitor {
@@ -419,6 +484,9 @@ public class BytecodeExtractor {
         @Override
         public void visitInnerClass(String name, String outerName, String innerName, int access) {
             classes.add(normalize(name));
+            if (outerName != null) {
+                classes.add(normalize(outerName));
+            }
         }
 
         @Override
