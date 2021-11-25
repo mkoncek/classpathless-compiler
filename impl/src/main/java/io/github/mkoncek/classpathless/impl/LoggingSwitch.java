@@ -111,11 +111,22 @@ public class LoggingSwitch implements AutoCloseable {
         this.logLevel = value;
     }
 
+    private static String joinArgs(Object... args) {
+        return Stream.of(args).map(arg -> arg == null ? "<null>" : arg.toString())
+                .collect(Collectors.joining(", "));
+    }
+
     public void trace(Object struct, String name, Object... args) {
         if (tracing) {
-            logln(true, Level.FINEST, "[TRACE] invoking {0}::{1}({2})", struct.getClass().getName(), name,
-                    Stream.of(args).map(arg -> arg == null ? "<null>" : arg.toString())
-                    .collect(Collectors.joining(", ")));
+            logln(true, Level.FINEST, "[TRACE] invoking {0}::{1}({2})",
+                    struct.getClass().getName(), name, joinArgs(args));
+        }
+    }
+
+    public void traceThis(Object struct, String self, String name, Object... args) {
+        if (tracing) {
+            logln(true, Level.FINEST, "[TRACE] invoking {0}::{1}({2}) [this = {3}]",
+                    struct.getClass().getName(), name, joinArgs(args), self);
         }
     }
 

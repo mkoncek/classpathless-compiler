@@ -220,7 +220,7 @@ public class InMemoryFileManager implements JavaFileManager {
         if (kind.equals(Kind.CLASS) && location.equals(StandardLocation.CLASS_OUTPUT)) {
             // We do not construct with ClassesProvider because the write will
             // happen by the caller
-            var result = new InMemoryJavaClassFileObject(className, null);
+            var result = new InMemoryJavaClassFileObject(className, null, loggingSwitch);
             loggingSwitch.trace(result);
             classOutputs.add(result);
             return result;
