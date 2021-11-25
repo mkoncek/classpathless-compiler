@@ -40,7 +40,7 @@ import io.github.mkoncek.classpathless.api.ClassesProvider;
  */
 public class BytecodeExtractor {
     private static final int CURRENT_ASM_OPCODE = org.objectweb.asm.Opcodes.ASM9;
-    private static final Pattern FORMAL_CONTENTS_PATTERN = Pattern.compile(".*?L(.*?)[;<]");
+    private static final Pattern FORMAL_CONTENTS_PATTERN = Pattern.compile(".*?L(.+?)[;<]");
 
     private SortedSet<String> classes = new TreeSet<>();
 
