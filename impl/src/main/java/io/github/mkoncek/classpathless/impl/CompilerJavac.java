@@ -17,6 +17,7 @@ package io.github.mkoncek.classpathless.impl;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,7 +53,6 @@ import io.github.mkoncek.classpathless.util.BytecodeExtractor;
  */
 public class CompilerJavac implements ClasspathlessCompiler {
     private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    private InMemoryFileManager fileManager;
     private Arguments arguments;
     private List<SourcePostprocessor> postprocessors = new ArrayList<>();
 
@@ -100,9 +100,38 @@ public class CompilerJavac implements ClasspathlessCompiler {
         }
     }
 
+    /**
+     * This is used in exceptional situations like runtime exceptions thrown
+     * from the compiler.
+     */
+    private static class WriterToMessagesListener extends Writer {
+        MessagesListener listener;
+
+        WriterToMessagesListener(MessagesListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public void write(char[] cbuf, int off, int len) throws IOException {
+            var message = new String(cbuf, off, len);
+            if (message.endsWith(System.lineSeparator())) {
+                message = message.substring(0, message.length() - System.lineSeparator().length());
+            }
+            if (!message.isBlank()) {
+                listener.addMessage(Level.SEVERE, message);
+            }
+        }
+
+        @Override
+        public void flush() throws IOException {
+        }
+
+        @Override
+        public void close() throws IOException {
+        }
+    }
+
     public CompilerJavac(Arguments arguments) {
-        this.fileManager = new InMemoryFileManager(
-                compiler.getStandardFileManager(null, null, StandardCharsets.UTF_8));
         this.arguments = arguments;
     }
 
@@ -149,6 +178,9 @@ public class CompilerJavac implements ClasspathlessCompiler {
             Optional<MessagesListener> messagesConsumer,
             IdentifiedSource... javaSourceFiles) {
         var messagesListener = messagesConsumer.orElse(new NullMessagesListener());
+        var fileManager = new InMemoryFileManager(
+                compiler.getStandardFileManager(new DiagnosticToMessagesListener(messagesListener), null, StandardCharsets.UTF_8));
+
         try (var loggingSwitch = new LoggingSwitch()) {
             loggingSwitch.setMessagesListener(messagesListener);
 
@@ -196,7 +228,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
                 sourcesChanged = false;
                 var diagnosticListener = new DiagnosticToMessagesListener(messagesListener);
 
-                if (compiler.getTask(null, fileManager, diagnosticListener,
+                if (compiler.getTask(new WriterToMessagesListener(messagesListener), fileManager, diagnosticListener,
                         arguments.compilerOptions(), null, compilationUnits).call()) {
                     break;
                 }
