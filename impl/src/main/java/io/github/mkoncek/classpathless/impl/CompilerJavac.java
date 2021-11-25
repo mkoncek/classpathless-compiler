@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -143,35 +142,6 @@ public class CompilerJavac implements ClasspathlessCompiler {
         postprocessors.add(postprocessor);
     }
 
-    private static void transitiveImport(IdentifiedBytecode bytecode,
-            ClassesProvider classesProvider, Set<String> result, LoggingSwitch loggingSwitch) {
-        result.add(bytecode.getClassIdentifier().getFullName());
-        for (var typename : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
-            if (result.add(typename)) {
-                int nestedPos = -1;
-                while ((nestedPos = typename.indexOf('$', nestedPos + 1)) != -1 &&
-                        nestedPos + 1 < typename.length()) {
-                    var nestedTypename = typename.substring(0, nestedPos);
-                    if (!result.contains(nestedTypename)) {
-                        var outerBytecodes = classesProvider.getClass(new ClassIdentifier(nestedTypename));
-                        if (outerBytecodes.isEmpty()) {
-                            loggingSwitch.logln(Level.FINE, "Typename {0} is not a valid class", nestedTypename);
-                        } else {
-                            result.add(nestedTypename);
-                            for (var outerBytecode : outerBytecodes) {
-                                for (var nestedClass : BytecodeExtractor.extractNestedClasses(
-                                        outerBytecode.getFile(), classesProvider)) {
-                                    result.add(nestedClass);
-                                    loggingSwitch.logln(Level.FINE, "Adding nested class {0}", nestedClass);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     @Override
     public Collection<IdentifiedBytecode> compileClass(
             ClassesProvider classesProvider,
@@ -194,10 +164,29 @@ public class CompilerJavac implements ClasspathlessCompiler {
             for (var source : javaSourceFiles) {
                 compilationUnits.add(new InMemoryJavaSourceFileObject(source));
                 for (var bytecode : classesProvider.getClass(source.getClassIdentifier())) {
-                    transitiveImport(bytecode, classesProvider, availableClasses, loggingSwitch);
-                    for (var nestedClass : BytecodeExtractor.extractNestedClasses(bytecode.getFile(), classesProvider)) {
-                        for (var nestedBytecode : classesProvider.getClass(new ClassIdentifier(nestedClass))) {
-                            transitiveImport(nestedBytecode, classesProvider, availableClasses, loggingSwitch);
+                    for (var newClass : BytecodeExtractor.extractFullClassGroup(bytecode.getFile(), classesProvider)) {
+                        if (availableClasses.add(newClass)) {
+                            loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (nested group): {0}", newClass);
+                        }
+                    }
+                }
+            }
+
+            for (var className : new ArrayList<>(availableClasses)) {
+                for (var bytecode : classesProvider.getClass(new ClassIdentifier(className))) {
+                    for (var newClass : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
+                        if (availableClasses.add(newClass)) {
+                            loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (direct import): {0}", newClass);
+                        }
+                    }
+                }
+            }
+
+            for (var className : new ArrayList<>(availableClasses)) {
+                for (var bytecode : classesProvider.getClass(new ClassIdentifier(className))) {
+                    for (var newClass : BytecodeExtractor.extractFullClassGroup(bytecode.getFile(), classesProvider)) {
+                        if (availableClasses.add(newClass)) {
+                            loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (nested group of direct import): {0}", newClass);
                         }
                     }
                 }
