@@ -579,6 +579,26 @@ public class BytecodeExtractorTest {
     }
 
     @Test
+    void testDirectlyNested1() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/MultiNested$Nested1$Nested12$Nested121$Nested1211.class")) {
+            var result = BytecodeExtractor.extractDirectNestedClasses(is.readAllBytes());
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$1Method"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$2Method"));
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211$3Method"));
+            assertTrue(result.size() == 3);
+        }
+    }
+
+    @Test
+    void testDirectlyNested2() throws IOException {
+        try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/MultiNested$Nested1$Nested12$Nested121.class")) {
+            var result = BytecodeExtractor.extractDirectNestedClasses(is.readAllBytes());
+            assertTrue(result.contains("io.github.mkoncek.classpathless.util.extract.MultiNested$Nested1$Nested12$Nested121$Nested1211"));
+            assertTrue(result.size() == 1);
+        }
+    }
+
+    @Test
     void testextractFullClassGroup1() throws IOException {
         try (var is = new FileInputStream("target/test-classes/io/github/mkoncek/classpathless/util/extract/MultiNested$Nested1$Nested11$Nested111.class")) {
             var result = BytecodeExtractor.extractFullClassGroup(is.readAllBytes(), new FSProvider());

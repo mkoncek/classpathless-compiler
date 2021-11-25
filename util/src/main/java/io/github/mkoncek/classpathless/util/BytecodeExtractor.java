@@ -35,7 +35,6 @@ import org.objectweb.asm.TypePath;
 
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
-import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 
 /**
  * A utility class to extract useful information fomr class files like typenames
@@ -92,52 +91,37 @@ public class BytecodeExtractor {
         return classes;
     }
 
-    private SortedSet<String> extractNestedClassesFrom(byte[] classFile,
-            ClassesProvider classesProvider) {
-        var classFiles = new ArrayList<IdentifiedBytecode>();
-        var addedClasses = new ArrayList<ClassIdentifier>();
+    private SortedSet<String> extractDirectNestedClassesFrom(byte[] classFile) {
+        var className = new String[1];
 
-        // Extract the name of outer class
         new ClassReader(classFile).accept(new ClassVisitor(CURRENT_ASM_OPCODE) {
             @Override
             public void visit(int version, int access, String name,
                     String signature, String superName, String[] interfaces) {
-                addedClasses.add(new ClassIdentifier(name.replace('/', '.')));
+                className[0] = name;
             }
-        }, 0);
 
-        var initialClass = addedClasses.get(0);
-        addedClasses.clear();
-
-        var visitor = new ClassVisitor(CURRENT_ASM_OPCODE) {
             @Override
             public void visitInnerClass(String name, String outerName,
                     String innerName, int access) {
-                var normalized = normalize(name);
-                if (normalized.startsWith(initialClass.getFullName())
-                        && normalized.length() > initialClass.getFullName().length()
-                        && !classes.contains(normalized)) {
-                    addedClasses.add(new ClassIdentifier(normalized));
+                if (outerName == null || className[0].equals(outerName)) {
+                    classes.add(name.replace('/', '.'));
                 }
             }
-        };
+        }, 0);
 
-        new ClassReader(classFile).accept(visitor, 0);
+        return classes;
+    }
 
-        while (!addedClasses.isEmpty()) {
-            classFiles.addAll(classesProvider.getClass(addedClasses.toArray(new ClassIdentifier[0])));
-
-            for (var added : addedClasses) {
-                classes.add(added.getFullName());
+    private SortedSet<String> extractNestedClassesFrom(byte[] classFile,
+            ClassesProvider classesProvider) {
+        for (var nestedName : extractDirectNestedClasses(classFile)) {
+            if (classes.add(nestedName)) {
+                for (var bytecode : classesProvider.getClass(new ClassIdentifier(nestedName))) {
+                    extractNestedClassesFrom(bytecode.getFile(), classesProvider);
+                }
             }
-            addedClasses.clear();
-
-            for (var file : classFiles) {
-                new ClassReader(file.getFile()).accept(visitor, 0);
-            }
-            classFiles.clear();
         }
-
         return classes;
     }
 
@@ -265,6 +249,15 @@ public class BytecodeExtractor {
         class Lol {};
         return 5;
     };
+
+    /**
+     * Extracts all directly nested class names from the initial outer class.
+     * @param classFile The file to extract names from.
+     * @return The set of all directly nested fully qualified class names excluding the initial outer class.
+     */
+    public static SortedSet<String> extractDirectNestedClasses(byte[] classFile) {
+        return new BytecodeExtractor().extractDirectNestedClassesFrom(classFile);
+    }
 
     /**
      * Recursively extracts all the nested class names from the initial outer
