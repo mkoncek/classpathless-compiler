@@ -196,11 +196,11 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
             for (var additionalClass : classesProvider.getClassPathListing()) {
                 if (additionalClass.charAt(0) == '[') {
-                    loggingSwitch.logln(Level.FINE, "Ignoring class from classpath listing: {0}", additionalClass);
+                    loggingSwitch.logln(Level.FINE, "Ignoring array type from classpath listing: {0}", additionalClass);
                     continue;
                 }
                 if (additionalClass.contains("/")) {
-                    loggingSwitch.logln(Level.FINE, "Ignoring lambda class from classpath listing: {0}", additionalClass);
+                    loggingSwitch.logln(Level.FINE, "Ignoring lambda type from classpath listing: {0}", additionalClass);
                     continue;
                 }
                 availableClasses.add(additionalClass);
