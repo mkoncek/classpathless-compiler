@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
+import io.github.mkoncek.classpathless.util.extract.AnotherDummyException;
 import io.github.mkoncek.classpathless.util.extract.Dummy;
 import io.github.mkoncek.classpathless.util.extract.DummyAnnotation;
 import io.github.mkoncek.classpathless.util.extract.DummyCloseable;
@@ -208,6 +209,7 @@ public class BytecodeExtractorTest {
             var result = BytecodeExtractor.extractTypenames(is.readAllBytes());
             genericCheck(result);
             assertTrue(result.contains(DummyException.class.getName()));
+            assertTrue(result.contains(AnotherDummyException.class.getName()));
         }
     }
 

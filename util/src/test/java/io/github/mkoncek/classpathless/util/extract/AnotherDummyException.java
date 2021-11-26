@@ -15,11 +15,5 @@
  */
 package io.github.mkoncek.classpathless.util.extract;
 
-public class TryCatch {
-    public static void main(String[] args) {
-        try {
-            Dummy.maybeThrow();
-        } catch (DummyException | AnotherDummyException ex) {
-        }
-    }
+public class AnotherDummyException extends RuntimeException {
 }
