@@ -35,8 +35,8 @@ import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 
 /**
- * A utility class to extract useful information fomr class files like typenames
- * methods, fields.
+ * A utility class to extract useful information from class files, for example
+ * type names, methods, fields.
  */
 public class BytecodeExtractor {
     private static final int CURRENT_ASM_OPCODE = org.objectweb.asm.Opcodes.ASM9;

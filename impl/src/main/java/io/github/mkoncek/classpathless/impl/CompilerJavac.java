@@ -172,6 +172,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
                 }
             }
 
+            // This also imports system classes but that shouldn't be a problem
             for (var className : new ArrayList<>(availableClasses)) {
                 for (var bytecode : classesProvider.getClass(new ClassIdentifier(className))) {
                     for (var newClass : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
@@ -192,7 +193,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
                 }
             }
 
-            loggingSwitch.logln(Level.INFO, "Found typenames in the bytecode: {0}", availableClasses);
+            loggingSwitch.logln(Level.INFO, "Found type names in the bytecode: {0}", availableClasses);
 
             for (var additionalClass : classesProvider.getClassPathListing()) {
                 if (additionalClass.charAt(0) == '[') {
@@ -206,7 +207,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
                 availableClasses.add(additionalClass);
             }
 
-            loggingSwitch.logln(Level.INFO, "All available typenames: {0}", availableClasses);
+            loggingSwitch.logln(Level.INFO, "All available type names: {0}", availableClasses);
 
             fileManager.setClassesProvider(classesProvider);
             fileManager.setAvailableClasses(availableClasses);
