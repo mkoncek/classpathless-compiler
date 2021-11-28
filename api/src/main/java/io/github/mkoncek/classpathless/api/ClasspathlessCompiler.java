@@ -65,7 +65,7 @@ public interface ClasspathlessCompiler {
 
     /**
      * @param classesProvider Provider for missing elements on the classpath.
-     * @param messagesConsummer Accepts any diagnostic or logging information
+     * @param messagesListener Accepts any diagnostic or logging information
      * from the compiler.
      * @param javaSourceFiles Files to compile.
      * @return Compiled bytecode of all javaSourceFiles.
