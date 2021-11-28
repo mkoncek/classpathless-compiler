@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
@@ -51,18 +50,6 @@ public class InMemoryJavaClassFileObject extends IdentifiedJavaFileObject {
     @Override
     ClassIdentifier getClassIdentifier() {
         return new ClassIdentifier(toUri().toString().substring(9));
-    }
-
-    @Override
-    public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
-        loggingSwitch.traceThis(this, getClassIdentifier().getFullName(), "getCharContent");
-
-        String result;
-        try (var is = openInputStream()) {
-            result = new String(is.readAllBytes(), StandardCharsets.US_ASCII);
-        }
-        loggingSwitch.trace(result);
-        return result;
     }
 
     @Override
