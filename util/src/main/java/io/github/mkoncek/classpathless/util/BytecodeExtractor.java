@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -33,6 +34,7 @@ import org.objectweb.asm.TypePath;
 
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
+import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 
 /**
  * A utility class to extract useful information from class files, for example
@@ -275,6 +277,74 @@ public class BytecodeExtractor {
                 result.add(dot(name));
             }
         }, 0);
+        return result;
+    }
+
+    /**
+     * This method returns all the class names that are required for the
+     * compilation of a source file corresponding to the bytecode of initialClass.
+     * @param initialClass The bytecode the dependencies of which are requested.
+     * @param classesProvider ClassesProvider of class dependencies.
+     * @return A collection of all class names that are required for compilation.
+     */
+    public static Collection<String> extractDependencies(
+            IdentifiedBytecode initialClass, ClassesProvider classesProvider) {
+        var result = new TreeSet<String>();
+        extractDependenciesPrivateImpl(result, initialClass, classesProvider,
+                s -> {}, s -> {}, s -> {});
+        return result;
+    }
+
+    /**
+     * This is a private implementation method.
+     * @param initialClass The bytecode the dependencies of which are requested.
+     * @param classesProvider ClassesProvider of class dependencies.
+     * @param first The consumer of a class name in case a class is added in the first phase.
+     * @param second The consumer of a class name in case a class is added in the second phase.
+     * @param third The consumer of a class name in case a class is added in the third phase.
+     * @return A collection of all class names that are required for compilation.
+     */
+    public static Collection<String> extractDependenciesPrivateImpl(Collection<String> result,
+            IdentifiedBytecode initialClass, ClassesProvider classesProvider,
+            Consumer<String> first, Consumer<String> second, Consumer<String> third) {
+        // First phase: the full group of the initial class
+        for (var newClass : BytecodeExtractor.extractFullClassGroup(initialClass.getFile(), classesProvider)) {
+            if (result.add(newClass)) {
+                first.accept(newClass);
+            }
+        }
+
+        var referencedClasses = new TreeSet<String>();
+
+        // Second phase: directly referenced names
+        for (var className : new ArrayList<>(result)) {
+            for (var bytecode : classesProvider.getClass(new ClassIdentifier(className))) {
+                for (var newClass : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
+                    if (result.add(newClass)) {
+                        second.accept(newClass);
+                    }
+                    referencedClasses.add(newClass);
+                }
+            }
+        }
+
+        // Third phase: all outer classes of all referenced classes
+        // Start from the longest names to avoid duplicating the traversals
+        for (String className; (className = referencedClasses.pollLast()) != null;) {
+            for (var bytecode : classesProvider.getClass(new ClassIdentifier(className))) {
+                var outer = BytecodeExtractor.extractOuterClass(bytecode.getFile());
+                if (outer.isPresent()) {
+                    String outerName = outer.get();
+                    if (result.add(outerName)) {
+                        third.accept(outerName);
+                    }
+                    referencedClasses.add(outerName);
+                }
+            }
+        }
+
+        result.remove(initialClass.getClassIdentifier().getFullName());
+
         return result;
     }
 

@@ -158,32 +158,10 @@ public class CompilerJavac implements ClasspathlessCompiler {
             for (var source : javaSourceFiles) {
                 compilationUnits.add(new InMemoryJavaSourceFileObject(source));
                 for (var bytecode : classesProvider.getClass(source.getClassIdentifier())) {
-                    for (var newClass : BytecodeExtractor.extractFullClassGroup(bytecode.getFile(), classesProvider)) {
-                        if (availableClasses.add(newClass)) {
-                            loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (nested group): {0}", newClass);
-                        }
-                    }
-                }
-            }
-
-            // This also imports system classes but that shouldn't be a problem
-            for (var className : new ArrayList<>(availableClasses)) {
-                for (var bytecode : classesProvider.getClass(new ClassIdentifier(className))) {
-                    for (var newClass : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
-                        if (availableClasses.add(newClass)) {
-                            loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (direct import): {0}", newClass);
-                        }
-                    }
-                }
-            }
-
-            for (var className : new ArrayList<>(availableClasses)) {
-                for (var bytecode : classesProvider.getClass(new ClassIdentifier(className))) {
-                    for (var newClass : BytecodeExtractor.extractFullClassGroup(bytecode.getFile(), classesProvider)) {
-                        if (availableClasses.add(newClass)) {
-                            loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (nested group of direct import): {0}", newClass);
-                        }
-                    }
+                    BytecodeExtractor.extractDependenciesPrivateImpl(availableClasses, bytecode, classesProvider,
+                            groupMember -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (nested group): {0}", groupMember),
+                            directlyReferenced -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (directly referenced): {0}", directlyReferenced),
+                            referencedOuter -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (outer class of directly referenced): {0}", referencedOuter));
                 }
             }
 
