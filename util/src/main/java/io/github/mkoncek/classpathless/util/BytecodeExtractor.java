@@ -289,15 +289,14 @@ public class BytecodeExtractor {
      */
     public static Collection<String> extractDependencies(
             IdentifiedBytecode initialClass, ClassesProvider classesProvider) {
-        var result = new TreeSet<String>();
-        extractDependenciesPrivateImpl(result, initialClass, classesProvider,
+        return extractDependenciesPrivateImpl(new TreeSet<String>(), initialClass, classesProvider,
                 s -> {}, s -> {}, s -> {});
-        return result;
     }
 
     /**
      * This is a private implementation method.
      * @param initialClass The bytecode the dependencies of which are requested.
+     * @param result The collection of class names where the results should be placed.
      * @param classesProvider ClassesProvider of class dependencies.
      * @param first The consumer of a class name in case a class is added in the first phase.
      * @param second The consumer of a class name in case a class is added in the second phase.
