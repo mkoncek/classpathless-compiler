@@ -21,7 +21,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -44,7 +43,6 @@ import io.github.mkoncek.classpathless.api.CompilationError;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.MessagesListener;
-import io.github.mkoncek.classpathless.api.SourcePostprocessor;
 import io.github.mkoncek.classpathless.util.BytecodeExtractor;
 
 /**
@@ -53,7 +51,6 @@ import io.github.mkoncek.classpathless.util.BytecodeExtractor;
 public class CompilerJavac implements ClasspathlessCompiler {
     private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     private Arguments arguments;
-    private List<SourcePostprocessor> postprocessors = new ArrayList<>();
 
     private static ClassIdentifier getIdentifier(JavaFileObject object) {
         // Remove the leading "/"
@@ -138,18 +135,15 @@ public class CompilerJavac implements ClasspathlessCompiler {
         this(new Arguments().useHostSystemClasses(true));
     }
 
-    public void addPostProcessor(SourcePostprocessor postprocessor) {
-        postprocessors.add(postprocessor);
-    }
-
     @Override
     public Collection<IdentifiedBytecode> compileClass(
             ClassesProvider classesProvider,
             Optional<MessagesListener> messagesConsumer,
             IdentifiedSource... javaSourceFiles) {
         var messagesListener = messagesConsumer.orElse(new NullMessagesListener());
+        var diagnosticListener = new DiagnosticToMessagesListener(messagesListener);
         var fileManager = new InMemoryFileManager(
-                compiler.getStandardFileManager(new DiagnosticToMessagesListener(messagesListener), null, StandardCharsets.UTF_8));
+                compiler.getStandardFileManager(diagnosticListener, null, StandardCharsets.UTF_8));
 
         try (var loggingSwitch = new LoggingSwitch()) {
             loggingSwitch.setMessagesListener(messagesListener);
@@ -214,38 +208,9 @@ public class CompilerJavac implements ClasspathlessCompiler {
             fileManager.setLoggingSwitch(loggingSwitch);
             fileManager.setArguments(arguments);
 
-            for (boolean sourcesChanged = true; sourcesChanged;) {
-                sourcesChanged = false;
-                var diagnosticListener = new DiagnosticToMessagesListener(messagesListener);
-
-                if (compiler.getTask(new WriterToMessagesListener(messagesListener), fileManager, diagnosticListener,
-                        arguments.compilerOptions(), null, compilationUnits).call()) {
-                    break;
-                }
-
-                messagesListener.addMessage(Level.SEVERE, "Compilation failed");
-
-                for (var entry : diagnosticListener.compilationErrors.entrySet()) {
-                    for (var cu : compilationUnits) {
-                        if (entry.getKey().equals(cu.getClassIdentifier())) {
-                            for (var postprocessor : postprocessors) {
-                                var result = postprocessor.postprocess(
-                                        cu.getIdentifiedSource(), entry.getValue());
-                                if (result.changed) {
-                                    sourcesChanged = true;
-                                    messagesListener.addMessage(Level.INFO,
-                                            "SourcePostprocessor: reloading the source code of {0}",
-                                            cu.getClassIdentifier().getFullName());
-                                    cu.setSource(result.source.getSourceCode());
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (!sourcesChanged) {
-                    throw new RuntimeException("Could not compile file");
-                }
+            if (!compiler.getTask(new WriterToMessagesListener(messagesListener), fileManager, diagnosticListener,
+                    arguments.compilerOptions(), null, compilationUnits).call()) {
+                throw new RuntimeException("Could not compile file");
             }
 
             var result = new ArrayList<IdentifiedBytecode>();

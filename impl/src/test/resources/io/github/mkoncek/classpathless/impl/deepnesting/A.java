@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.mkoncek.classpathless.api;
+package io.github.mkoncek.classpathless.impl.deepnesting;
 
-public interface SourcePreprocessor {
-    IdentifiedSource preprocess(IdentifiedSource source);
-
-    public static class Null implements SourcePreprocessor {
-        @Override
-        public IdentifiedSource preprocess(IdentifiedSource source) {
-            return source;
+public class A {
+    public static class AA {
+        public static class AAA extends B.BB.BBB {
+            public static class AAAA {
+            }
         }
     }
 }

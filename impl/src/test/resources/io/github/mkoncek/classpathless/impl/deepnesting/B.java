@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.mkoncek.classpathless.impl;
+package io.github.mkoncek.classpathless.impl.deepnesting;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.junit.jupiter.api.Test;
-
-public class SourcePreprocessorImplTest {
-    @Test
-    public void testSanitizeImports() {
-        assertEquals("import com.google.gson.internal.$Gson$Preconditions;" + System.lineSeparator(),
-                SourcePreprocessorImpl.fixImports("import com.google.gson.internal..Gson.Preconditions;"));
+public class B {
+    public static class BB {
+        public static class BBB {
+            public static class BBBB {
+            }
+        }
     }
 }
