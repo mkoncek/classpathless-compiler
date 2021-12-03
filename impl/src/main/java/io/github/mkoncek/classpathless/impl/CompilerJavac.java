@@ -219,13 +219,11 @@ public class CompilerJavac implements ClasspathlessCompiler {
             fileManager.clearAndGetOutput(classOutputs);
 
             for (final var classOutput : classOutputs) {
-                byte[] content;
-                try {
-                    content = classOutput.openInputStream().readAllBytes();
+                try (var is = classOutput.openInputStream()) {
+                    result.add(new IdentifiedBytecode(getIdentifier(classOutput), is.readAllBytes()));
                 } catch (IOException ex) {
                     throw new UncheckedIOException(ex);
                 }
-                result.add(new IdentifiedBytecode(getIdentifier(classOutput), content));
             }
 
             fileManager.setClassesProvider(null);
