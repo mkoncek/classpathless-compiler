@@ -68,10 +68,6 @@ public class DeepNestingTest {
             source = new IdentifiedSource(new ClassIdentifier("io.github.mkoncek.classpathless.impl.deepnesting.A"), is.readAllBytes());
         }
 
-        System.setProperty("io.github.mkoncek.cplc.logging", "/home/mkoncek/Upstream/classpathless-compiler/impl/logg");
-        System.setProperty("io.github.mkoncek.cplc.loglevel", "finest");
-        System.setProperty("io.github.mkoncek.cplc.tracing", "");
-
         var cplc = new CompilerJavac(new CompilerJavac.Arguments().useHostSystemClasses(true));
         var cplcResult = cplc.compileClass(new SimpleClassesProvider(classes), Optional.of(new PrintingMessagesListener()), source);
 
