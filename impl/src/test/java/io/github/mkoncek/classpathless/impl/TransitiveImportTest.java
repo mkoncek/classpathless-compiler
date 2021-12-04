@@ -49,7 +49,7 @@ public class TransitiveImportTest {
         var cp = new SimpleClassesProvider(classes);
         var cplc = new CompilerJavac();
         try (var fis = new FileInputStream("src/test/java/io/github/mkoncek/classpathless/impl/files/NestedImporter.java")) {
-            var result = cplc.compileClass(cp, Optional.of(new NullMessagesListener()),
+            var result = cplc.compileClass(cp, Optional.of(NullMessagesListener.INSTANCE),
                     new IdentifiedSource(new ClassIdentifier("io.github.mkoncek.classpathless.impl.files.NestedImporter"), fis.readAllBytes()));
             assertEquals(3, result.size());
         }

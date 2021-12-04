@@ -20,6 +20,11 @@ import java.util.logging.Level;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class NullMessagesListener implements MessagesListener {
+    private NullMessagesListener() {
+    }
+
+    public static final MessagesListener INSTANCE = new NullMessagesListener();
+
     @Override
     public void addMessage(Level level, String message) {
     }

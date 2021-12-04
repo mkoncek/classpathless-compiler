@@ -63,7 +63,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
             ClassesProvider classesProvider,
             Optional<MessagesListener> messagesConsumer,
             IdentifiedSource... javaSourceFiles) {
-        var messagesListener = messagesConsumer.orElse(new NullMessagesListener());
+        var messagesListener = messagesConsumer.orElse(NullMessagesListener.INSTANCE);
         var diagnosticListener = new DiagnosticToMessagesListener(messagesListener);
         var fileManager = new InMemoryFileManager(
                 compiler.getStandardFileManager(diagnosticListener, null, StandardCharsets.UTF_8));
