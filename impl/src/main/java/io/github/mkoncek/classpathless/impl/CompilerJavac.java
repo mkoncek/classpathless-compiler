@@ -22,9 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -39,7 +37,6 @@ import javax.tools.ToolProvider;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.ClasspathlessCompiler;
-import io.github.mkoncek.classpathless.api.CompilationError;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.MessagesListener;
@@ -59,23 +56,15 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
     private static class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
         MessagesListener listener;
-        Map<ClassIdentifier, Collection<CompilationError>> compilationErrors;
 
         DiagnosticToMessagesListener(MessagesListener listener) {
             this.listener = listener;
-            this.compilationErrors = new TreeMap<>();
         }
 
         @Override
         public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
             var msg = diagnostic.getMessage(Locale.ENGLISH);
-
             var source = diagnostic.getSource();
-            if (source != null) {
-                compilationErrors.computeIfAbsent(getIdentifier(source), k -> new ArrayList<>())
-                .add(new CompilationError(diagnostic.getLineNumber(), diagnostic.getColumnNumber(),
-                        diagnostic.getCode(), diagnostic.getMessage(null)));
-            }
 
             if (listener != null) {
                 var severity = Level.SEVERE;
