@@ -17,19 +17,15 @@ package io.github.mkoncek.classpathless.impl;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
@@ -52,68 +48,6 @@ public class CompilerJavac implements ClasspathlessCompiler {
     private static ClassIdentifier getIdentifier(JavaFileObject object) {
         // Remove the leading "/"
         return new ClassIdentifier(object.getName().substring(1));
-    }
-
-    private static class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
-        MessagesListener listener;
-
-        DiagnosticToMessagesListener(MessagesListener listener) {
-            this.listener = listener;
-        }
-
-        @Override
-        public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
-            var msg = diagnostic.getMessage(Locale.ENGLISH);
-            var source = diagnostic.getSource();
-
-            if (listener != null) {
-                var severity = Level.SEVERE;
-                var errCode = diagnostic.getCode();
-                if (errCode != null) {
-                    if (errCode.startsWith("compiler.warn")) {
-                        severity = Level.WARNING;
-                    } else if (errCode.startsWith("compiler.note")) {
-                        severity = Level.WARNING;
-                    }
-                }
-
-                listener.addMessage(severity, "Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
-                        diagnostic.getLineNumber(), diagnostic.getColumnNumber(), msg,
-                        System.lineSeparator(), errCode,
-                        (source != null ? "(" + source.getName() + ") " : " "));
-            }
-        }
-    }
-
-    /**
-     * This is used in exceptional situations like runtime exceptions thrown
-     * from the compiler.
-     */
-    private static class WriterToMessagesListener extends Writer {
-        MessagesListener listener;
-
-        WriterToMessagesListener(MessagesListener listener) {
-            this.listener = listener;
-        }
-
-        @Override
-        public void write(char[] cbuf, int off, int len) throws IOException {
-            var message = new String(cbuf, off, len);
-            if (message.endsWith(System.lineSeparator())) {
-                message = message.substring(0, message.length() - System.lineSeparator().length());
-            }
-            if (!message.isBlank()) {
-                listener.addMessage(Level.SEVERE, message);
-            }
-        }
-
-        @Override
-        public void flush() throws IOException {
-        }
-
-        @Override
-        public void close() throws IOException {
-        }
     }
 
     public CompilerJavac(Arguments arguments) {
