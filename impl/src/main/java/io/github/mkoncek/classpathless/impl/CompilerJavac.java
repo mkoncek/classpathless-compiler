@@ -36,6 +36,9 @@ import io.github.mkoncek.classpathless.api.ClasspathlessCompiler;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.helpers.DiagnosticToMessagesListener;
+import io.github.mkoncek.classpathless.helpers.NullMessagesListener;
+import io.github.mkoncek.classpathless.helpers.WriterToMessagesListener;
 import io.github.mkoncek.classpathless.util.BytecodeExtractor;
 
 /**

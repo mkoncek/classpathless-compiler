@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.mkoncek.classpathless.impl;
+package io.github.mkoncek.classpathless.helpers;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

@@ -27,6 +27,8 @@ import org.junit.jupiter.api.Test;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
+import io.github.mkoncek.classpathless.helpers.NullMessagesListener;
+import io.github.mkoncek.classpathless.helpers.SimpleClassesProvider;
 
 public class TransitiveImportTest {
     @Test

@@ -32,9 +32,9 @@ import com.beust.jcommander.Parameter;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.helpers.PrintingMessagesListener;
 import io.github.mkoncek.classpathless.impl.CompilerJavac;
 import io.github.mkoncek.classpathless.impl.InMemoryJavaSourceFileObject;
-import io.github.mkoncek.classpathless.impl.PrintingMessagesListener;
 
 /**
  * @author Marián Konček

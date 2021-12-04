@@ -31,6 +31,8 @@ import org.junit.jupiter.api.Test;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 import io.github.mkoncek.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.helpers.NullClassesProvider;
+import io.github.mkoncek.classpathless.helpers.PrintingMessagesListener;
 
 public class CompilerJavacTest {
     private static final SystemJavac javac = new SystemJavac();
