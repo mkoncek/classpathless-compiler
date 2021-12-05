@@ -20,8 +20,8 @@ Command line options:
 In order to use them, define the following system properties.
 
 * `io.github.mkoncek.cplc.logging=[filename]` - sets the logging output
-  * if not provided, logging output is discarded
-  * if empty, logs into `stderr`
+  * if the property is not defined, logging output is discarded
+  * if the value is empty, logs into the standard error output
 
 * `io.github.mkoncek.cplc.loglevel=[[off] | severe | warning | info | config | fine | finer | finest | all]` -
 sets the level of logging, default is `off`
