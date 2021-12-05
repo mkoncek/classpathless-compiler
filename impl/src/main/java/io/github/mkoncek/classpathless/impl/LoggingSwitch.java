@@ -29,8 +29,8 @@ import java.util.stream.Stream;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class LoggingSwitch implements AutoCloseable {
-    PrintStream printer;
-    MessagesListener listener;
+    private PrintStream printer;
+    private MessagesListener listener;
     private boolean tracing = false;
     private java.util.logging.Level logLevel = Level.OFF;
 
@@ -42,9 +42,13 @@ public class LoggingSwitch implements AutoCloseable {
         }
     }
 
+    private static PrintStream newNullPrintStream() {
+        return new PrintStream(PrintStream.nullOutputStream(), false, StandardCharsets.UTF_8);
+    }
+
     public static class Null extends LoggingSwitch {
         public Null() {
-            super(new PrintStream(PrintStream.nullOutputStream(), false, StandardCharsets.UTF_8));
+            super(newNullPrintStream());
         }
     }
 
@@ -55,7 +59,7 @@ public class LoggingSwitch implements AutoCloseable {
     public LoggingSwitch() {
         var logging = System.getProperty("io.github.mkoncek.cplc.logging");
         if (logging == null) {
-            printer = new PrintStream(PrintStream.nullOutputStream(), false, StandardCharsets.UTF_8);
+            printer = newNullPrintStream();
         } else {
             if (logging.isEmpty()) {
                 printer = System.err;
