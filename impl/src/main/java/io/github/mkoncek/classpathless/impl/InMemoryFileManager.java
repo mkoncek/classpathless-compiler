@@ -119,8 +119,7 @@ public class InMemoryFileManager implements JavaFileManager {
     public Iterable<Set<Location>> listLocationsForModules(Location location)
             throws IOException {
         loggingSwitch.trace(this, "listLocationsForModules", location);
-        Iterable<Set<Location>> result;
-        result = delegate.listLocationsForModules(location);
+        Iterable<Set<Location>> result = Collections.emptyList();
 
         if (location.equals(StandardLocation.SYSTEM_MODULES) && !arguments.useHostSystemClasses()) {
             // Only expose the one module which contains java.lang package.
@@ -128,7 +127,7 @@ public class InMemoryFileManager implements JavaFileManager {
             // java.lang further for example on classpath.
             // Even though we expose the host module, the invocation of list
             // will return a list of system classes provided by the provider.
-            for (var set : result) {
+            for (var set : delegate.listLocationsForModules(location)) {
                 for (var loc : set) {
                     if (loc.getName().equals(HOST_SYSTEM_MODULES)) {
                         result = Arrays.asList(Set.of(loc));
@@ -136,6 +135,8 @@ public class InMemoryFileManager implements JavaFileManager {
                     }
                 }
             }
+        } else {
+            result = delegate.listLocationsForModules(location);
         }
 
         loggingSwitch.trace(result);
