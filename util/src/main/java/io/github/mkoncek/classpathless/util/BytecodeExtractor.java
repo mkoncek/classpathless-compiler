@@ -289,12 +289,12 @@ public class BytecodeExtractor {
      */
     public static Collection<String> extractDependencies(
             IdentifiedBytecode initialClass, ClassesProvider classesProvider) {
-        return extractDependenciesImpl(initialClass, classesProvider,
-                s -> {}, s -> {}, s -> {});
+        final Consumer<String> empty = s -> {};
+        return extractDependenciesImpl(initialClass, classesProvider, empty, empty, empty);
     }
 
     /**
-     * This is a protected implementation method.
+     * This is an implementation method.
      * @param initialClass The bytecode the dependencies of which are requested.
      * @param classesProvider ClassesProvider of class dependencies.
      * @param first The consumer of a class name in case a class is added in the first phase.
@@ -302,7 +302,7 @@ public class BytecodeExtractor {
      * @param third The consumer of a class name in case a class is added in the third phase.
      * @return A collection of all class names that are required for compilation.
      */
-    protected static Collection<String> extractDependenciesImpl(
+    static Collection<String> extractDependenciesImpl(
             IdentifiedBytecode initialClass, ClassesProvider classesProvider,
             Consumer<String> first, Consumer<String> second, Consumer<String> third) {
         var result = new TreeSet<String>();
