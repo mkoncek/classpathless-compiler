@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -61,6 +62,16 @@ public class CompilerJavac implements ClasspathlessCompiler {
         this(new Arguments().useHostSystemClasses(true));
     }
 
+    private static class Extractor extends BytecodeExtractor {
+        // Make the method accessible in this context
+        protected static Collection<String> extractDependenciesImpl(
+                IdentifiedBytecode initialClass, ClassesProvider classesProvider,
+                Consumer<String> first, Consumer<String> second, Consumer<String> third) {
+            return BytecodeExtractor.extractDependenciesImpl(initialClass,
+                    classesProvider, first, second, third);
+        }
+    }
+
     @Override
     public Collection<IdentifiedBytecode> compileClass(
             ClassesProvider classesProvider,
@@ -84,10 +95,10 @@ public class CompilerJavac implements ClasspathlessCompiler {
             for (var source : javaSourceFiles) {
                 compilationUnits.add(new InMemoryJavaSourceFileObject(source));
                 for (var bytecode : classesProvider.getClass(source.getClassIdentifier())) {
-                    BytecodeExtractor.extractDependenciesPrivateImpl(availableClasses, bytecode, classesProvider,
+                    availableClasses.addAll(Extractor.extractDependenciesImpl(bytecode, classesProvider,
                             groupMember -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (nested group): {0}", groupMember),
                             directlyReferenced -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (directly referenced): {0}", directlyReferenced),
-                            referencedOuter -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (outer class of directly referenced): {0}", referencedOuter));
+                            referencedOuter -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (outer class of directly referenced): {0}", referencedOuter)));
                 }
             }
 

@@ -289,23 +289,24 @@ public class BytecodeExtractor {
      */
     public static Collection<String> extractDependencies(
             IdentifiedBytecode initialClass, ClassesProvider classesProvider) {
-        return extractDependenciesPrivateImpl(new TreeSet<String>(), initialClass, classesProvider,
+        return extractDependenciesImpl(initialClass, classesProvider,
                 s -> {}, s -> {}, s -> {});
     }
 
     /**
-     * This is a private implementation method.
+     * This is a protected implementation method.
      * @param initialClass The bytecode the dependencies of which are requested.
-     * @param result The collection of class names where the results should be placed.
      * @param classesProvider ClassesProvider of class dependencies.
      * @param first The consumer of a class name in case a class is added in the first phase.
      * @param second The consumer of a class name in case a class is added in the second phase.
      * @param third The consumer of a class name in case a class is added in the third phase.
      * @return A collection of all class names that are required for compilation.
      */
-    public static Collection<String> extractDependenciesPrivateImpl(Collection<String> result,
+    protected static Collection<String> extractDependenciesImpl(
             IdentifiedBytecode initialClass, ClassesProvider classesProvider,
             Consumer<String> first, Consumer<String> second, Consumer<String> third) {
+        var result = new TreeSet<String>();
+
         // First phase: the full group of the initial class
         for (var newClass : BytecodeExtractor.extractFullClassGroup(initialClass.getFile(), classesProvider)) {
             if (result.add(newClass)) {
