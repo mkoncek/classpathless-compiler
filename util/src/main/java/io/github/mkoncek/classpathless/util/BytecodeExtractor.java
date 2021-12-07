@@ -320,6 +320,12 @@ public class BytecodeExtractor {
         for (var className : new ArrayList<>(result)) {
             for (var bytecode : classesProvider.getClass(new ClassIdentifier(className))) {
                 for (var newClass : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
+                    // Do not add the bytecode of java.lang.Object
+                    // This is a workaround to work with DCEVM 11
+                    if (newClass.equals("java.lang.Object")) {
+                        continue;
+                    }
+
                     if (result.add(newClass)) {
                         second.accept(newClass);
                     }
