@@ -320,12 +320,6 @@ public class BytecodeExtractor {
         for (var className : new ArrayList<>(result)) {
             for (var bytecode : classesProvider.getClass(new ClassIdentifier(className))) {
                 for (var newClass : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
-                    // Do not add the bytecode of java.lang.Object
-                    // This is a workaround to work with DCEVM 11
-                    if (newClass.equals("java.lang.Object")) {
-                        continue;
-                    }
-
                     if (result.add(newClass)) {
                         second.accept(newClass);
                     }
@@ -337,6 +331,12 @@ public class BytecodeExtractor {
         // Third phase: all outer classes of all referenced classes
         // Start from the longest names to avoid duplicating the traversals
         for (String className; (className = referencedClasses.pollLast()) != null;) {
+            // Do not read the bytecode of java.lang.Object
+            // This is a workaround to work with DCEVM 11
+            if (className.equals("java.lang.Object")) {
+                continue;
+            }
+
             for (var bytecode : classesProvider.getClass(new ClassIdentifier(className))) {
                 var outer = BytecodeExtractor.extractOuterClass(bytecode.getFile());
                 if (outer.isPresent()) {
