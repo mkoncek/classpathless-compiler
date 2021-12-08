@@ -48,6 +48,8 @@ public class InMemoryFileManager implements JavaFileManager {
 
     private ArrayList<InMemoryJavaClassFileObject> classOutputs = new ArrayList<>();
 
+    private JavaFileObject hostJavaLangObjectFileObject = null;
+
     // The Location name for system classes in Java >= 9
     private static final String HOST_SYSTEM_MODULES = "SYSTEM_MODULES[java.base]";
 
@@ -286,8 +288,13 @@ public class InMemoryFileManager implements JavaFileManager {
                 }
             }
 
-            loggingSwitch.logln(Level.FINE, "Loading class from ClassProvider: \"{0}\"", availableClassName);
-            result.add(new InMemoryJavaClassFileObject(availableClassName, classesProvider, loggingSwitch));
+            if (availableClassName.equals("java.lang.Object") && arguments.useHostJavaLangObject()) {
+                loggingSwitch.logln(Level.FINE, "Loading host file object \"java.lang.Object\": {0}", hostJavaLangObjectFileObject);
+                result.add(hostJavaLangObjectFileObject);
+            } else {
+                loggingSwitch.logln(Level.FINE, "Loading class from ClassProvider: \"{0}\"", availableClassName);
+                result.add(new InMemoryJavaClassFileObject(availableClassName, classesProvider, loggingSwitch));
+            }
         }
 
         return result;
@@ -307,6 +314,11 @@ public class InMemoryFileManager implements JavaFileManager {
                 // Ignore "java.base" until the next slash
                 int begin = name.indexOf('/') + 1;
                 name = name.substring(begin).replace('/', '.');
+
+                // This makes only sense when arguments.useHostJavaLangObject() == true
+                if (name.equals("java.lang.Object")) {
+                    hostJavaLangObjectFileObject = jfobject;
+                }
                 result.add(name);
             } else {
                 loggingSwitch.logln(Level.FINE, "Skipping over file object: \"{0}\"", name);

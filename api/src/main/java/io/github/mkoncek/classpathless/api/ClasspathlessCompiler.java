@@ -24,6 +24,7 @@ import java.util.Optional;
 public interface ClasspathlessCompiler {
     static class Arguments {
         private boolean useHostSystemClasses = true;
+        private boolean useHostJavaLangObject = true;
         private List<String> compilerFlags = Collections.emptyList();
 
         /**
@@ -38,6 +39,13 @@ public interface ClasspathlessCompiler {
          */
         public boolean useHostSystemClasses() {
             return useHostSystemClasses;
+        }
+
+        /**
+         * @return The value of the option.
+         */
+        public boolean useHostJavaLangObject() {
+            return useHostJavaLangObject;
         }
 
         /**
@@ -59,6 +67,18 @@ public interface ClasspathlessCompiler {
          */
         public Arguments useHostSystemClasses(boolean value) {
             useHostSystemClasses = value;
+            return this;
+        }
+
+        /**
+         * Set flag whether or not to use host java.lang.Object class regardless
+         * of "useHostSystemClasses". Setting this to true is a workaround
+         * preventing processes running under the DCEVM JVM from crashing.
+         * @param value The value of the option.
+         * @return this.
+         */
+        public Arguments useHostJavaLangObject(boolean value) {
+            useHostJavaLangObject = value;
             return this;
         }
     }
