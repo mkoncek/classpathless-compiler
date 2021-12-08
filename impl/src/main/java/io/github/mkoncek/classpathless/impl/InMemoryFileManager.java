@@ -260,9 +260,9 @@ public class InMemoryFileManager implements JavaFileManager {
      * A utility method which loads all available classes as a collection of
      * file objects for a given package name.
      */
-    private Collection<InMemoryJavaClassFileObject> loadClasses(
+    private Collection<JavaFileObject> loadClasses(
             String packageName, boolean recurse) throws IOException {
-        var result = new ArrayList<InMemoryJavaClassFileObject>();
+        var result = new ArrayList<JavaFileObject>();
 
         for (var availableClassName : availableClasses.tailSet(packageName)) {
             if (!availableClassName.startsWith(packageName)) {
