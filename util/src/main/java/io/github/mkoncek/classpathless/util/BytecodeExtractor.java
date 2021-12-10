@@ -79,7 +79,7 @@ public class BytecodeExtractor {
     }
 
     private SortedSet<String> extractTypenamesFrom(byte[] classFile) {
-        new ClassReader(classFile).accept(new ExtrClassVisitor(), 0);
+        new ClassReader(classFile).accept(new ExtrClassVisitor(classes), 0);
         return classes;
     }
 
@@ -354,9 +354,12 @@ public class BytecodeExtractor {
         return result;
     }
 
-    private class ExtrAnnotationVisitor extends AnnotationVisitor {
-        public ExtrAnnotationVisitor() {
+    private static class ExtrAnnotationVisitor extends AnnotationVisitor {
+        private SortedSet<String> classes;
+
+        private ExtrAnnotationVisitor(SortedSet<String> classes) {
             super(CURRENT_ASM_OPCODE);
+            this.classes = classes;
         }
 
         @Override
@@ -371,22 +374,25 @@ public class BytecodeExtractor {
         }
     }
 
-    private class ExtrMethodVisitor extends MethodVisitor {
-        public ExtrMethodVisitor() {
+    private static class ExtrMethodVisitor extends MethodVisitor {
+        private SortedSet<String> classes;
+
+        private ExtrMethodVisitor(SortedSet<String> classes) {
             super(CURRENT_ASM_OPCODE);
+            this.classes = classes;
         }
 
         @Override
         public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
             extractDescriptor(descriptor, classes);
-            return new ExtrAnnotationVisitor();
+            return new ExtrAnnotationVisitor(classes);
         }
 
         @Override
         public AnnotationVisitor visitParameterAnnotation(int parameter,
                 String descriptor, boolean visible) {
             extractDescriptor(descriptor, classes);
-            return new ExtrAnnotationVisitor();
+            return new ExtrAnnotationVisitor(classes);
         }
 
         @Override
@@ -394,28 +400,28 @@ public class BytecodeExtractor {
                 TypePath typePath, Label[] start, Label[] end, int[] index,
                 String descriptor, boolean visible) {
             extractDescriptor(descriptor, classes);
-            return new ExtrAnnotationVisitor();
+            return new ExtrAnnotationVisitor(classes);
         }
 
         @Override
         public AnnotationVisitor visitTypeAnnotation(int typeRef,
                 TypePath typePath, String descriptor, boolean visible) {
             extractDescriptor(descriptor, classes);
-            return new ExtrAnnotationVisitor();
+            return new ExtrAnnotationVisitor(classes);
         }
 
         @Override
         public AnnotationVisitor visitTryCatchAnnotation(int typeRef,
                 TypePath typePath, String descriptor, boolean visible) {
             extractDescriptor(descriptor, classes);
-            return new ExtrAnnotationVisitor();
+            return new ExtrAnnotationVisitor(classes);
         }
 
         @Override
         public AnnotationVisitor visitInsnAnnotation(int typeRef,
                 TypePath typePath, String descriptor, boolean visible) {
             extractDescriptor(descriptor, classes);
-            return new ExtrAnnotationVisitor();
+            return new ExtrAnnotationVisitor(classes);
         }
 
         @Override
@@ -465,21 +471,27 @@ public class BytecodeExtractor {
         }
     }
 
-    private class ExtrFieldVisitor extends FieldVisitor {
-        public ExtrFieldVisitor() {
+    private static class ExtrFieldVisitor extends FieldVisitor {
+        private SortedSet<String> classes;
+
+        private ExtrFieldVisitor(SortedSet<String> classes) {
             super(CURRENT_ASM_OPCODE);
+            this.classes = classes;
         }
 
         @Override
         public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
             extractDescriptor(descriptor, classes);
-            return new ExtrAnnotationVisitor();
+            return new ExtrAnnotationVisitor(classes);
         }
     }
 
-    private class ExtrClassVisitor extends ClassVisitor {
-        public ExtrClassVisitor() {
+    private static class ExtrClassVisitor extends ClassVisitor {
+        private SortedSet<String> classes;
+
+        private ExtrClassVisitor(SortedSet<String> classes) {
             super(CURRENT_ASM_OPCODE);
+            this.classes = classes;
         }
 
         @Override
@@ -504,7 +516,7 @@ public class BytecodeExtractor {
             if (signature != null) {
                 extractSignature(signature, classes);
             }
-            return new ExtrFieldVisitor();
+            return new ExtrFieldVisitor(classes);
         }
 
         @Override
@@ -519,7 +531,7 @@ public class BytecodeExtractor {
                     classes.add(dot(ex));
                 }
             }
-            return new ExtrMethodVisitor();
+            return new ExtrMethodVisitor(classes);
         }
 
         @Override
@@ -541,14 +553,14 @@ public class BytecodeExtractor {
         @Override
         public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
             extractDescriptor(descriptor, classes);
-            return new ExtrAnnotationVisitor();
+            return new ExtrAnnotationVisitor(classes);
         }
 
         @Override
         public AnnotationVisitor visitTypeAnnotation(int typeRef,
                 TypePath typePath, String descriptor, boolean visible) {
             extractDescriptor(descriptor, classes);
-            return new ExtrAnnotationVisitor();
+            return new ExtrAnnotationVisitor(classes);
         }
     }
 }
