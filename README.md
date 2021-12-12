@@ -5,6 +5,9 @@ sources with customizable class providers. This tool works differently from the
 traditional java compiler in that it doesn't use provided classpath but instead
 pulls dependencies using an API.
 
+## Building
+Simply run `mvn install`.
+
 ## CLI tool
 
 This tool behaves similar to `javac` but it uses its own API to resolve imports.
