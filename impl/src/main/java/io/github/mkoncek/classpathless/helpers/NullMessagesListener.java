@@ -15,8 +15,7 @@
  */
 package io.github.mkoncek.classpathless.helpers;
 
-import java.util.logging.Level;
-
+import io.github.mkoncek.classpathless.api.LoggingCategory;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class NullMessagesListener implements MessagesListener {
@@ -26,10 +25,10 @@ public class NullMessagesListener implements MessagesListener {
     public static final MessagesListener INSTANCE = new NullMessagesListener();
 
     @Override
-    public void addMessage(Level level, String message) {
+    public void addMessage(LoggingCategory category, String message) {
     }
 
     @Override
-    public void addMessage(Level level, String format, Object... args) {
+    public void addMessage(LoggingCategory category, String format, Object... args) {
     }
 }

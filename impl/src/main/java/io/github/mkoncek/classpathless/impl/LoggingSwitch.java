@@ -21,11 +21,11 @@ import java.io.PrintStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.github.mkoncek.classpathless.api.LoggingCategory;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class LoggingSwitch implements AutoCloseable {
@@ -122,40 +122,44 @@ public class LoggingSwitch implements AutoCloseable {
 
     public void trace(Object struct, String name, Object... args) {
         if (tracing) {
-            logln(true, Level.FINEST, "[TRACE] invoking {0}::{1}({2})",
+            logln(true, LoggingCategory.INFO, "[TRACE] invoking {0}::{1}({2})",
                     struct.getClass().getName(), name, joinArgs(args));
         }
     }
 
     public void traceThis(Object struct, String self, String name, Object... args) {
         if (tracing) {
-            logln(true, Level.FINEST, "[TRACE] invoking {0}::{1}({2}) [this = {3}]",
+            logln(true, LoggingCategory.INFO, "[TRACE] invoking {0}::{1}({2}) [this = {3}]",
                     struct.getClass().getName(), name, joinArgs(args), self);
         }
     }
 
     public void trace(Object result) {
         if (tracing) {
-            logln(true, Level.FINEST, "[TRACE] returning {0}", result == null ? "<null>" : result.toString());
+            logln(true, LoggingCategory.INFO, "[TRACE] returning {0}", result == null ? "<null>" : result.toString());
         }
     }
 
-    private void log(boolean traced, java.util.logging.Level level, String format, Object... args) {
+    private void log(boolean traced, LoggingCategory category, String format, Object... args) {
         if (!traced && listener != null) {
-            listener.addMessage(level, format, args);
+            listener.addMessage(category, format, args);
         }
 
+        /*
+         * OFF
+         *
         if (logLevel != Level.OFF && level.intValue() >= logLevel.intValue()) {
             var message = "[CPLC.LOG] " + MessageFormat.format(format, args);
             printer.print(message);
         }
+         */
     }
 
-    private void logln(boolean traced, java.util.logging.Level level, String format, Object... args) {
-        log(traced, level, format + System.lineSeparator(), args);
+    private void logln(boolean traced, LoggingCategory category, String format, Object... args) {
+        log(traced, category, format + System.lineSeparator(), args);
     }
 
-    public void logln(java.util.logging.Level level, String format, Object... args) {
-        logln(false, level, format, args);
+    public void logln(LoggingCategory category, String format, Object... args) {
+        logln(false, category, format, args);
     }
 }

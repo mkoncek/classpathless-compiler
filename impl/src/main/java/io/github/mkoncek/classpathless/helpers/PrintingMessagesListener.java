@@ -16,8 +16,8 @@
 package io.github.mkoncek.classpathless.helpers;
 
 import java.io.PrintStream;
-import java.util.logging.Level;
 
+import io.github.mkoncek.classpathless.api.LoggingCategory;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class PrintingMessagesListener implements MessagesListener {
@@ -32,7 +32,7 @@ public class PrintingMessagesListener implements MessagesListener {
     }
 
     @Override
-    public void addMessage(Level level, String message) {
+    public void addMessage(LoggingCategory category, String message) {
         printer.println(message);
     }
 }

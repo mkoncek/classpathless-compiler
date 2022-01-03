@@ -16,12 +16,12 @@
 package io.github.mkoncek.classpathless.helpers;
 
 import java.util.Locale;
-import java.util.logging.Level;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 
+import io.github.mkoncek.classpathless.api.LoggingCategory;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
@@ -37,17 +37,17 @@ public class DiagnosticToMessagesListener implements DiagnosticListener<JavaFile
         var source = diagnostic.getSource();
 
         if (listener != null) {
-            var severity = Level.SEVERE;
+            var category = LoggingCategory.COMPILER_DIAGNOSTICS;
             var errCode = diagnostic.getCode();
             if (errCode != null) {
                 if (errCode.startsWith("compiler.warn")) {
-                    severity = Level.WARNING;
+                    category = LoggingCategory.COMPILER_DIAGNOSTICS_WARNING;
                 } else if (errCode.startsWith("compiler.note")) {
-                    severity = Level.WARNING;
+                    category = LoggingCategory.COMPILER_DIAGNOSTICS_NOTE;
                 }
             }
 
-            listener.addMessage(severity, "Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
+            listener.addMessage(category, "Compiler diagnostic at {5}[{0}, {1}]: {2}{3}(code: {4})",
                     diagnostic.getLineNumber(), diagnostic.getColumnNumber(), msg,
                     System.lineSeparator(), errCode,
                     (source != null ? "(" + source.getName() + ") " : " "));

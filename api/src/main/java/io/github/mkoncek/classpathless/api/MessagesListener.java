@@ -20,18 +20,18 @@ import java.text.MessageFormat;
 public interface MessagesListener {
     /**
      * Allows ClasspathlessCompiler to send runtime updates to caller.
-     * @param level Severity of information.
+     * @param category Category of information.
      * @param message The message.
      */
-    void addMessage(java.util.logging.Level level, String message);
+    void addMessage(LoggingCategory category, String message);
 
     /**
      * Allows ClasspathlessCompiler to send runtime updates to caller.
-     * @param level Severity of information.
+     * @param category Category of information.
      * @param format Format string as given to MessageFormat.
      * @param args Arguments to format.
      */
-    default void addMessage(java.util.logging.Level level, String format, Object... args) {
-        addMessage(level, MessageFormat.format(format, args));
+    default void addMessage(LoggingCategory category, String format, Object... args) {
+        addMessage(category, MessageFormat.format(format, args));
     }
 }

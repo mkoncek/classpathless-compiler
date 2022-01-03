@@ -17,8 +17,8 @@ package io.github.mkoncek.classpathless.helpers;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.logging.Level;
 
+import io.github.mkoncek.classpathless.api.LoggingCategory;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 /**
@@ -39,7 +39,7 @@ public class WriterToMessagesListener extends Writer {
             message = message.substring(0, message.length() - System.lineSeparator().length());
         }
         if (!message.isBlank()) {
-            listener.addMessage(Level.SEVERE, message);
+            listener.addMessage(LoggingCategory.COMPILER_CRITICAL, message);
         }
     }
 
