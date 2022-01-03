@@ -18,8 +18,8 @@ package io.github.mkoncek.classpathless.helpers;
 import java.io.IOException;
 import java.io.Writer;
 
-import io.github.mkoncek.classpathless.api.LoggingCategory;
 import io.github.mkoncek.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.api.MessagesListener.Category;
 
 /**
  * This is used in exceptional situations like runtime exceptions thrown
@@ -39,7 +39,7 @@ public class WriterToMessagesListener extends Writer {
             message = message.substring(0, message.length() - System.lineSeparator().length());
         }
         if (!message.isBlank()) {
-            listener.addMessage(LoggingCategory.COMPILER_CRITICAL, message);
+            listener.addMessage(Category.COMPILER_CRITICAL, message);
         }
     }
 

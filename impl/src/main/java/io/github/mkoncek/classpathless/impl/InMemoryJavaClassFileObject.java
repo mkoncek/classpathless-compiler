@@ -24,7 +24,7 @@ import java.net.URI;
 
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
-import io.github.mkoncek.classpathless.api.LoggingCategory;
+import io.github.mkoncek.classpathless.api.MessagesListener.Category;
 
 /**
  * @implNote This class is implemented in terms of lazy loading. That makes it
@@ -59,11 +59,11 @@ public class InMemoryJavaClassFileObject extends IdentifiedJavaFileObject {
         if (classProvider != null) {
             var bytecodes = classProvider.getClass(getClassIdentifier());
             if (bytecodes.size() == 1) {
-                loggingSwitch.logln(LoggingCategory.LOADING_BYTECODE, "Found bytecode for {0}", this);
+                loggingSwitch.logln(Category.LOADING_BYTECODE, "Found bytecode for {0}", this);
                 byteStream.write(bytecodes.iterator().next().getFile());
                 classProvider = null;
             } else if (bytecodes.size() == 0) {
-                loggingSwitch.logln(LoggingCategory.LOADING_BYTECODE, "Bytecode for {0} not found", this);
+                loggingSwitch.logln(Category.LOADING_BYTECODE, "Bytecode for {0} not found", this);
                 throw new RuntimeException("Compiler tried to access the bytecode of \"" + getClassIdentifier().getFullName() + "\" which could not be provided");
             } else {
                 throw new IllegalStateException("[CPLC] InMemoryJavaClassFileObject::openInputStream: ClassesProvider provded more than one class");

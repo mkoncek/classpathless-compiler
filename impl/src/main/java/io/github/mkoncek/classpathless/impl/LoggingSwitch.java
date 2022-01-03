@@ -25,8 +25,8 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.github.mkoncek.classpathless.api.LoggingCategory;
 import io.github.mkoncek.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.api.MessagesListener.Category;
 
 public class LoggingSwitch implements AutoCloseable {
     private PrintStream printer;
@@ -122,25 +122,25 @@ public class LoggingSwitch implements AutoCloseable {
 
     public void trace(Object struct, String name, Object... args) {
         if (tracing) {
-            logln(true, LoggingCategory.INFO, "[TRACE] invoking {0}::{1}({2})",
+            logln(true, Category.INFO, "[TRACE] invoking {0}::{1}({2})",
                     struct.getClass().getName(), name, joinArgs(args));
         }
     }
 
     public void traceThis(Object struct, String self, String name, Object... args) {
         if (tracing) {
-            logln(true, LoggingCategory.INFO, "[TRACE] invoking {0}::{1}({2}) [this = {3}]",
+            logln(true, Category.INFO, "[TRACE] invoking {0}::{1}({2}) [this = {3}]",
                     struct.getClass().getName(), name, joinArgs(args), self);
         }
     }
 
     public void trace(Object result) {
         if (tracing) {
-            logln(true, LoggingCategory.INFO, "[TRACE] returning {0}", result == null ? "<null>" : result.toString());
+            logln(true, Category.INFO, "[TRACE] returning {0}", result == null ? "<null>" : result.toString());
         }
     }
 
-    private void log(boolean traced, LoggingCategory category, String format, Object... args) {
+    private void log(boolean traced, Category category, String format, Object... args) {
         if (!traced && listener != null) {
             listener.addMessage(category, format, args);
         }
@@ -155,11 +155,11 @@ public class LoggingSwitch implements AutoCloseable {
          */
     }
 
-    private void logln(boolean traced, LoggingCategory category, String format, Object... args) {
+    private void logln(boolean traced, Category category, String format, Object... args) {
         log(traced, category, format + System.lineSeparator(), args);
     }
 
-    public void logln(LoggingCategory category, String format, Object... args) {
+    public void logln(Category category, String format, Object... args) {
         logln(false, category, format, args);
     }
 }

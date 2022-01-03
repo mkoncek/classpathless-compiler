@@ -34,8 +34,8 @@ import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.ClasspathlessCompiler;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
-import io.github.mkoncek.classpathless.api.LoggingCategory;
 import io.github.mkoncek.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.api.MessagesListener.Category;
 import io.github.mkoncek.classpathless.helpers.DiagnosticToMessagesListener;
 import io.github.mkoncek.classpathless.helpers.NullMessagesListener;
 import io.github.mkoncek.classpathless.helpers.WriterToMessagesListener;
@@ -74,7 +74,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
         try (var loggingSwitch = new LoggingSwitch()) {
             loggingSwitch.setMessagesListener(messagesListener);
 
-            loggingSwitch.logln(LoggingCategory.INFO, "Starting a compilation task of sources: {0}",
+            loggingSwitch.logln(Category.INFO, "Starting a compilation task of sources: {0}",
                     Stream.of(javaSourceFiles).map(jsf -> jsf.getClassIdentifier().getFullName())
                     .collect(Collectors.toUnmodifiableList()));
 
@@ -85,30 +85,30 @@ public class CompilerJavac implements ClasspathlessCompiler {
                 compilationUnits.add(new InMemoryJavaSourceFileObject(source));
                 for (var bytecode : classesProvider.getClass(source.getClassIdentifier())) {
                     availableClasses.addAll(BytecodeExtractorAccessor.extractDependenciesImpl(bytecode, classesProvider,
-                            groupMember -> loggingSwitch.logln(LoggingCategory.BYTECODE_EXTRACTION_DETAILED,
+                            groupMember -> loggingSwitch.logln(Category.BYTECODE_EXTRACTION_DETAILED,
                                     "Adding class to classpath listing (nested group): {0}", groupMember),
-                            directlyReferenced -> loggingSwitch.logln(LoggingCategory.BYTECODE_EXTRACTION_DETAILED,
+                            directlyReferenced -> loggingSwitch.logln(Category.BYTECODE_EXTRACTION_DETAILED,
                                     "Adding class to classpath listing (directly referenced): {0}", directlyReferenced),
-                            referencedOuter -> loggingSwitch.logln(LoggingCategory.BYTECODE_EXTRACTION_DETAILED,
+                            referencedOuter -> loggingSwitch.logln(Category.BYTECODE_EXTRACTION_DETAILED,
                                     "Adding class to classpath listing (outer class of directly referenced): {0}", referencedOuter)));
                 }
             }
 
-            loggingSwitch.logln(LoggingCategory.BYTECODE_EXTRACTION_SUMMARY, "Found type names in the bytecode: {0}", availableClasses);
+            loggingSwitch.logln(Category.BYTECODE_EXTRACTION_SUMMARY, "Found type names in the bytecode: {0}", availableClasses);
 
             for (var additionalClass : classesProvider.getClassPathListing()) {
                 if (additionalClass.charAt(0) == '[') {
-                    loggingSwitch.logln(LoggingCategory.IGNORING_NON_TYPES, "Ignoring array type from classpath listing: {0}", additionalClass);
+                    loggingSwitch.logln(Category.IGNORING_NON_TYPES, "Ignoring array type from classpath listing: {0}", additionalClass);
                     continue;
                 }
                 if (additionalClass.contains("/")) {
-                    loggingSwitch.logln(LoggingCategory.IGNORING_NON_TYPES, "Ignoring lambda type from classpath listing: {0}", additionalClass);
+                    loggingSwitch.logln(Category.IGNORING_NON_TYPES, "Ignoring lambda type from classpath listing: {0}", additionalClass);
                     continue;
                 }
                 availableClasses.add(additionalClass);
             }
 
-            loggingSwitch.logln(LoggingCategory.AVAILABLE_TYPE_NAMES, "All available type names: {0}", availableClasses);
+            loggingSwitch.logln(Category.AVAILABLE_TYPE_NAMES, "All available type names: {0}", availableClasses);
 
             fileManager.setClassesProvider(classesProvider);
             fileManager.setAvailableClasses(availableClasses);
@@ -137,7 +137,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
             fileManager.setLoggingSwitch(null);
 
             for (var resultFile : result) {
-                loggingSwitch.logln(LoggingCategory.INFO, "Compilation result: {0}", resultFile.getClassIdentifier().getFullName());
+                loggingSwitch.logln(Category.INFO, "Compilation result: {0}", resultFile.getClassIdentifier().getFullName());
             }
 
             return result;

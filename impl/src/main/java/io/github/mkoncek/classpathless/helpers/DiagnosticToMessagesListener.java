@@ -21,8 +21,8 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 
-import io.github.mkoncek.classpathless.api.LoggingCategory;
 import io.github.mkoncek.classpathless.api.MessagesListener;
+import io.github.mkoncek.classpathless.api.MessagesListener.Category;
 
 public class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
     private MessagesListener listener;
@@ -37,13 +37,13 @@ public class DiagnosticToMessagesListener implements DiagnosticListener<JavaFile
         var source = diagnostic.getSource();
 
         if (listener != null) {
-            var category = LoggingCategory.COMPILER_DIAGNOSTICS;
+            var category = Category.COMPILER_DIAGNOSTICS;
             var errCode = diagnostic.getCode();
             if (errCode != null) {
                 if (errCode.startsWith("compiler.warn")) {
-                    category = LoggingCategory.COMPILER_DIAGNOSTICS_WARNING;
+                    category = Category.COMPILER_DIAGNOSTICS_WARNING;
                 } else if (errCode.startsWith("compiler.note")) {
-                    category = LoggingCategory.COMPILER_DIAGNOSTICS_NOTE;
+                    category = Category.COMPILER_DIAGNOSTICS_NOTE;
                 }
             }
 

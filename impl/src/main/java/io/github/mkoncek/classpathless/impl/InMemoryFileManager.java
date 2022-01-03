@@ -33,7 +33,7 @@ import javax.tools.StandardLocation;
 
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.ClasspathlessCompiler;
-import io.github.mkoncek.classpathless.api.LoggingCategory;
+import io.github.mkoncek.classpathless.api.MessagesListener.Category;
 
 /**
  * @author Marián Konček
@@ -273,26 +273,26 @@ public class InMemoryFileManager implements JavaFileManager {
 
             if (packageName.isEmpty()) {
                 if (availableClassName.contains(".") && !recurse) {
-                    loggingSwitch.logln(LoggingCategory.SKIPPING_SUBPACKAGE, "Skipping over class from a package from ClassProvider: \"{0}\"", availableClassName);
+                    loggingSwitch.logln(Category.SKIPPING_SUBPACKAGE, "Skipping over class from a package from ClassProvider: \"{0}\"", availableClassName);
                     continue;
                 }
             } else {
                 if (availableClassName.length() <= packageName.length() + 1) {
-                    loggingSwitch.logln(LoggingCategory.SKIPPING_SUBPACKAGE, "Skipping over class from a package from ClassProvider: \"{0}\"", availableClassName);
+                    loggingSwitch.logln(Category.SKIPPING_SUBPACKAGE, "Skipping over class from a package from ClassProvider: \"{0}\"", availableClassName);
                     continue;
                 }
                 if (availableClassName.charAt(packageName.length()) != '.' ||
                         (availableClassName.substring(packageName.length() + 1).contains(".") && !recurse)) {
-                    loggingSwitch.logln(LoggingCategory.SKIPPING_SUBPACKAGE, "Skipping over class from a subpackage from ClassProvider: \"{0}\"", availableClassName);
+                    loggingSwitch.logln(Category.SKIPPING_SUBPACKAGE, "Skipping over class from a subpackage from ClassProvider: \"{0}\"", availableClassName);
                     continue;
                 }
             }
 
             if (availableClassName.equals("java.lang.Object") && hostJavaLangObjectFileObject != null) {
-                loggingSwitch.logln(LoggingCategory.EXPOSING_CLASS_FROM_PROVIDER, "Exposing host file object \"java.lang.Object\": {0}", hostJavaLangObjectFileObject);
+                loggingSwitch.logln(Category.EXPOSING_CLASS_FROM_PROVIDER, "Exposing host file object \"java.lang.Object\": {0}", hostJavaLangObjectFileObject);
                 result.add(hostJavaLangObjectFileObject);
             } else {
-                loggingSwitch.logln(LoggingCategory.EXPOSING_CLASS_FROM_PROVIDER, "Exposing class from ClassProvider: \"{0}\"", availableClassName);
+                loggingSwitch.logln(Category.EXPOSING_CLASS_FROM_PROVIDER, "Exposing class from ClassProvider: \"{0}\"", availableClassName);
                 result.add(new InMemoryJavaClassFileObject(availableClassName, classesProvider, loggingSwitch));
             }
         }
@@ -320,7 +320,7 @@ public class InMemoryFileManager implements JavaFileManager {
                 }
                 result.add(name);
             } else {
-                loggingSwitch.logln(LoggingCategory.SKIPPING_NON_CLASS_OBJECT,
+                loggingSwitch.logln(Category.SKIPPING_NON_CLASS_OBJECT,
                         "Skipping over a non-class file object: \"{0}\"", name);
             }
         }
@@ -336,7 +336,7 @@ public class InMemoryFileManager implements JavaFileManager {
                 // package name with the location CLASS_PATH, then we return all.
                 for (String name : hostClassesNames(delegate.list(location, packageName, kinds, recurse))) {
                     if (availableClasses.add(name)) {
-                        loggingSwitch.logln(LoggingCategory.EXPOSING_CLASS_FROM_PROVIDER, "Exposing system class from ClassProvider: \"{0}\"", name);
+                        loggingSwitch.logln(Category.EXPOSING_CLASS_FROM_PROVIDER, "Exposing system class from ClassProvider: \"{0}\"", name);
                     }
                 }
                 return Collections.<JavaFileObject>emptyList();
@@ -346,7 +346,7 @@ public class InMemoryFileManager implements JavaFileManager {
                 // Location == CLASS_PATH, due to different nature of modules
                 for (String name : hostClassesNames(delegate.list(location, packageName, kinds, recurse))) {
                     if (availableClasses.add(name)) {
-                        loggingSwitch.logln(LoggingCategory.EXPOSING_CLASS_FROM_PROVIDER, "Exposing system class from ClassProvider: \"{0}\"", name);
+                        loggingSwitch.logln(Category.EXPOSING_CLASS_FROM_PROVIDER, "Exposing system class from ClassProvider: \"{0}\"", name);
                     }
                 }
                 return new ArrayList<JavaFileObject>(loadClasses(packageName, recurse));
