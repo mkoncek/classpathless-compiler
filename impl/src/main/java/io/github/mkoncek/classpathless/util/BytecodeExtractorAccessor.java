@@ -16,6 +16,7 @@
 package io.github.mkoncek.classpathless.util;
 
 import java.util.Collection;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import io.github.mkoncek.classpathless.api.ClassesProvider;
@@ -25,6 +26,13 @@ public class BytecodeExtractorAccessor {
     public static Collection<String> extractDependenciesImpl(
             IdentifiedBytecode initialClass, ClassesProvider classesProvider,
             Consumer<String> first, Consumer<String> second, Consumer<String> third) {
-        return BytecodeExtractor.extractDependenciesImpl(initialClass, classesProvider, first, second, third);
+        var impl = BytecodeExtractor.extractDependenciesImpl2(initialClass, classesProvider, first, second, third);
+        var result = new TreeSet<String>();
+        for (var entry : impl.entrySet()) {
+            result.add(entry.getKey());
+            result.addAll(entry.getValue());
+        }
+        result.remove(initialClass.getClassIdentifier().getFullName());
+        return result;
     }
 }

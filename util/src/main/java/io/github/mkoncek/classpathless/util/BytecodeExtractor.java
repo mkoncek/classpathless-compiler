@@ -17,10 +17,13 @@ package io.github.mkoncek.classpathless.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -35,6 +38,7 @@ import org.objectweb.asm.TypePath;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
+import io.github.mkoncek.classpathless.api.MessagesListener;
 
 /**
  * A utility class to extract useful information from class files, for example
@@ -291,6 +295,94 @@ public class BytecodeExtractor {
             IdentifiedBytecode initialClass, ClassesProvider classesProvider) {
         final Consumer<String> empty = s -> {};
         return extractDependenciesImpl(initialClass, classesProvider, empty, empty, empty);
+    }
+
+    public static Map<String, ? extends Collection<String>> extractDependencies2(
+            IdentifiedBytecode initialClass, ClassesProvider classesProvider) {
+        final Consumer<String> empty = s -> {};
+        return extractDependenciesImpl2(initialClass, classesProvider, empty, empty, empty);
+    }
+
+    public static Map<String, ? extends Collection<String>> extractDependencies2(
+            IdentifiedBytecode initialClass, ClassesProvider classesProvider, MessagesListener messagesListener) {
+        return extractDependenciesImpl2(initialClass, classesProvider,
+                groupMember -> messagesListener.addMessage(Level.FINE, "Adding class to classpath listing (nested group): {0}", groupMember),
+                directlyReferenced -> messagesListener.addMessage(Level.FINE, "Adding class to classpath listing (directly referenced): {0}", directlyReferenced),
+                referencedOuter -> messagesListener.addMessage(Level.FINE, "Adding class to classpath listing (outer class of directly referenced): {0}", referencedOuter));
+    }
+
+    /**
+     * This is an implementation method.
+     * @param initialClass The bytecode the dependencies of which are requested.
+     * @param classesProvider ClassesProvider of class dependencies.
+     * @param first The consumer of a class name in case a class is added in the first phase.
+     * @param second The consumer of a class name in case a class is added in the second phase.
+     * @param third The consumer of a class name in case a class is added in the third phase.
+     * @return A collection of all class names that are required for compilation.
+     */
+    static Map<String, ? extends Collection<String>> extractDependenciesImpl2(
+            IdentifiedBytecode initialClass, ClassesProvider classesProvider,
+            Consumer<String> first, Consumer<String> second, Consumer<String> third) {
+        var result = new TreeMap<String, ArrayList<String>>();
+
+        // First phase: the full group of the initial class
+        for (var newClass : BytecodeExtractor.extractFullClassGroup(initialClass.getFile(), classesProvider)) {
+            result.computeIfAbsent(newClass, key -> {
+                first.accept(newClass);
+                return new ArrayList<>();
+            });
+        }
+
+        var referencedClasses = new TreeSet<String>();
+
+        // Second phase: directly referenced names
+        for (var entry : result.entrySet()) {
+            for (var bytecode : classesProvider.getClass(new ClassIdentifier(entry.getKey()))) {
+                for (var newClass : BytecodeExtractor.extractTypenames(bytecode.getFile())) {
+                    if (newClass.equals(entry.getKey())) {
+                        continue;
+                    }
+                    if (referencedClasses.add(newClass)) {
+                        second.accept(newClass);
+                    }
+                    entry.getValue().add(newClass);
+                }
+            }
+        }
+
+        var classOuters = new TreeMap<String, String>();
+
+        // Third phase: all outer classes of all referenced classes
+        // Start from the longest names to avoid duplicating the traversals
+        for (String className; (className = referencedClasses.pollLast()) != null;) {
+            // Do not read the bytecode of java.lang.Object
+            // This is a workaround to work with DCEVM 11
+            if (className.equals("java.lang.Object")) {
+                continue;
+            }
+
+            for (var bytecode : classesProvider.getClass(new ClassIdentifier(className))) {
+                var outer = BytecodeExtractor.extractOuterClass(bytecode.getFile());
+                if (outer.isPresent()) {
+                    String outerName = outer.get();
+                    if (referencedClasses.add(outerName)) {
+                        third.accept(outerName);
+                    }
+                    classOuters.put(className, outerName);
+                }
+            }
+        }
+
+        for (var entry : result.entrySet()) {
+            for (int i = 0; i != entry.getValue().size(); ++i) {
+                var outer = classOuters.get(entry.getValue().get(i));
+                if (outer != null) {
+                    entry.getValue().add(outer);
+                }
+            }
+        }
+
+        return result;
     }
 
     /**
