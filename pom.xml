@@ -61,7 +61,6 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release.impl>11</maven.compiler.release.impl>
     <spotbugs.version>4.2.3</spotbugs.version>
   </properties>
 
