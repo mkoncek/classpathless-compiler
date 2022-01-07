@@ -288,7 +288,7 @@ public class InMemoryFileManager implements JavaFileManager {
                 }
             }
 
-            if (availableClassName.equals("java.lang.Object") && arguments.useHostJavaLangObject()) {
+            if (availableClassName.equals("java.lang.Object") && hostJavaLangObjectFileObject != null) {
                 loggingSwitch.logln(Level.FINE, "Loading host file object \"java.lang.Object\": {0}", hostJavaLangObjectFileObject);
                 result.add(hostJavaLangObjectFileObject);
             } else {
@@ -315,8 +315,7 @@ public class InMemoryFileManager implements JavaFileManager {
                 int begin = name.indexOf('/') + 1;
                 name = name.substring(begin).replace('/', '.');
 
-                // This makes only sense when arguments.useHostJavaLangObject() == true
-                if (name.equals("java.lang.Object")) {
+                if (name.equals("java.lang.Object") && arguments.useHostJavaLangObject()) {
                     hostJavaLangObjectFileObject = jfobject;
                 }
                 result.add(name);
