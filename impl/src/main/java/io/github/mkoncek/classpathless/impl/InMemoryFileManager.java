@@ -326,11 +326,8 @@ public class InMemoryFileManager implements JavaFileManager {
         return result;
     }
 
-    @Override
-    public Iterable<JavaFileObject> list(Location location, String packageName,
+    private Iterable<JavaFileObject> listImpl(Location location, String packageName,
             Set<Kind> kinds, boolean recurse) throws IOException {
-        loggingSwitch.trace(this, "list", location, packageName, kinds, recurse);
-
         if (!arguments.useHostSystemClasses()) {
             if (location.equals(StandardLocation.PLATFORM_CLASS_PATH)) {
                 // Add all the host visible names to our set of available classes
@@ -341,9 +338,7 @@ public class InMemoryFileManager implements JavaFileManager {
                         loggingSwitch.logln(Level.FINE, "Loading system class from ClassProvider: \"{0}\"", name);
                     }
                 }
-                var result = Collections.<JavaFileObject>emptyList();
-                loggingSwitch.trace(result);
-                return result;
+                return Collections.<JavaFileObject>emptyList();
             } else if (location.getName().equals(HOST_SYSTEM_MODULES)) {
                 // In this case we need to return the whole set of classes
                 // because the compiler will not ask for host classes with
@@ -353,21 +348,24 @@ public class InMemoryFileManager implements JavaFileManager {
                         loggingSwitch.logln(Level.FINE, "Loading system class from ClassProvider: \"{0}\"", name);
                     }
                 }
-                var result = new ArrayList<JavaFileObject>(loadClasses(packageName, recurse));
-                loggingSwitch.trace(result);
-                return result;
+                return new ArrayList<JavaFileObject>(loadClasses(packageName, recurse));
             }
         }
 
         if (location.equals(StandardLocation.CLASS_PATH)) {
-            var result = new ArrayList<JavaFileObject>(loadClasses(packageName, recurse));
-            loggingSwitch.trace(result);
-            return result;
+            return new ArrayList<JavaFileObject>(loadClasses(packageName, recurse));
         } else {
-            var result = delegate.list(location, packageName, kinds, recurse);
-            loggingSwitch.trace(result);
-            return result;
+            return delegate.list(location, packageName, kinds, recurse);
         }
+    }
+
+    @Override
+    public Iterable<JavaFileObject> list(Location location, String packageName,
+            Set<Kind> kinds, boolean recurse) throws IOException {
+        loggingSwitch.trace(this, "list", location, packageName, kinds, recurse);
+        var result = listImpl(location, packageName, kinds, recurse);
+        loggingSwitch.trace(result);
+        return result;
     }
 
     @Override
