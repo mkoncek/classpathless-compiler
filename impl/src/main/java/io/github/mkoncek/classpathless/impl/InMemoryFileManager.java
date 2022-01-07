@@ -365,6 +365,11 @@ public class InMemoryFileManager implements JavaFileManager {
         loggingSwitch.trace(this, "list", location, packageName, kinds, recurse);
         var result = listImpl(location, packageName, kinds, recurse);
         loggingSwitch.trace(result);
+        for (var it = result.iterator(); it.hasNext();) {
+            if (it.next() == null) {
+                throw new IllegalStateException("[CPLC] InMemoryFileManager::list: returned list contains a null object");
+            }
+        }
         return result;
     }
 
