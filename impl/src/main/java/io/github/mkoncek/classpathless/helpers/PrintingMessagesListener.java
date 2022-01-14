@@ -18,9 +18,11 @@ package io.github.mkoncek.classpathless.helpers;
 import java.io.PrintStream;
 import java.util.logging.Level;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class PrintingMessagesListener implements MessagesListener {
+    @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "print stream is safe to share")
     private PrintStream printer;
 
     public PrintingMessagesListener(PrintStream printer) {

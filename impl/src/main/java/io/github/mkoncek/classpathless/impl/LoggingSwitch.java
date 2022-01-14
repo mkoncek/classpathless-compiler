@@ -26,10 +26,12 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class LoggingSwitch implements AutoCloseable {
     private PrintStream printer;
+    @SuppressFBWarnings(value = {"EI_EXPOSE_REP"}, justification = "listener is safe to share")
     private MessagesListener listener;
     private boolean tracing = false;
     private java.util.logging.Level logLevel = Level.OFF;

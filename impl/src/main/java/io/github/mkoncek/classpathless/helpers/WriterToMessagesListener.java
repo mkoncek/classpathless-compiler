@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.logging.Level;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 /**
@@ -26,6 +27,7 @@ import io.github.mkoncek.classpathless.api.MessagesListener;
  * from the compiler.
  */
 public class WriterToMessagesListener extends Writer {
+    @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "listener is safe to share")
     private MessagesListener listener;
 
     public WriterToMessagesListener(MessagesListener listener) {

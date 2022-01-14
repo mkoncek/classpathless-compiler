@@ -22,9 +22,11 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.mkoncek.classpathless.api.MessagesListener;
 
 public class DiagnosticToMessagesListener implements DiagnosticListener<JavaFileObject> {
+    @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "listener is safe to share")
     private MessagesListener listener;
 
     public DiagnosticToMessagesListener(MessagesListener listener) {

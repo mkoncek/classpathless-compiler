@@ -39,7 +39,7 @@ public class NullClassesProvider implements ClassesProvider {
     private Map<String, IdentifiedBytecode> nameToBytecode;
 
     public NullClassesProvider(Map<String, IdentifiedBytecode> initialMapping) {
-        this.nameToBytecode = initialMapping;
+        this.nameToBytecode = new TreeMap<>(initialMapping);
 
         try {
             var fm = ToolProvider.getSystemJavaCompiler().getStandardFileManager(null, null, StandardCharsets.UTF_8);

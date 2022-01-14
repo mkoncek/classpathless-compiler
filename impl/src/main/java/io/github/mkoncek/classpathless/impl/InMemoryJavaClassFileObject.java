@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.logging.Level;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 
@@ -33,8 +34,10 @@ import io.github.mkoncek.classpathless.api.ClassesProvider;
  * @author Marián Konček
  */
 public class InMemoryJavaClassFileObject extends IdentifiedJavaFileObject {
+    @SuppressFBWarnings(value = {"EI_EXPOSE_REP"}, justification = "logging is safe to share")
     private LoggingSwitch loggingSwitch;
     private ClassesProvider classProvider;
+    @SuppressFBWarnings(value = {"EI_EXPOSE_REP"}, justification = "it is intended to share the same stream with the writer")
     private ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 
     public InMemoryJavaClassFileObject(String name, ClassesProvider classProvider, LoggingSwitch loggingSwitch) {
