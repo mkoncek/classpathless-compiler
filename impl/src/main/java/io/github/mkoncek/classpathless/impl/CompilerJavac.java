@@ -78,16 +78,40 @@ public class CompilerJavac implements ClasspathlessCompiler {
                     Stream.of(javaSourceFiles).map(jsf -> jsf.getClassIdentifier().getFullName())
                     .collect(Collectors.toUnmodifiableList()));
 
-            Collection<InMemoryJavaSourceFileObject> compilationUnits = new ArrayList<>();
+            var compilationUnits = new ArrayList<InMemoryJavaSourceFileObject>();
             var availableClasses = new TreeSet<String>();
 
             for (var source : javaSourceFiles) {
                 compilationUnits.add(new InMemoryJavaSourceFileObject(source));
-                for (var bytecode : classesProvider.getClass(source.getClassIdentifier())) {
-                    availableClasses.addAll(BytecodeExtractorAccessor.extractDependenciesImpl(bytecode, classesProvider,
-                            groupMember -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (nested group): {0}", groupMember),
-                            directlyReferenced -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (directly referenced): {0}", directlyReferenced),
-                            referencedOuter -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (outer class of directly referenced): {0}", referencedOuter)));
+                var bytecodes = classesProvider.getClass(source.getClassIdentifier());
+                if (bytecodes == null) {
+                    loggingSwitch.logln(Level.WARNING, "ClassesProvider::getClass returned null for source {0}",
+                            source.getClassIdentifier().getFullName());
+                    continue;
+                }
+                for (var bytecode : bytecodes) {
+                    if (bytecode == null) {
+                        loggingSwitch.logln(Level.WARNING, "ClassesProvider::getClass returned list contains null object for source {0}",
+                                source.getClassIdentifier().getFullName());
+                    } else if (bytecode.getFile().length < 4) {
+                        // 0xCAFEBABE
+                        loggingSwitch.logln(Level.SEVERE, "Ignoring invalid bytecode {0} for source {1}",
+                                bytecode.getClassIdentifier().getFullName(),
+                                source.getClassIdentifier().getFullName());
+                    } else {
+                        try {
+                            availableClasses.addAll(BytecodeExtractorAccessor.extractDependenciesImpl(bytecode,
+                                    classesProvider,
+                                    groupMember -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (nested group): {0}", groupMember),
+                                    directlyReferenced -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (directly referenced): {0}", directlyReferenced),
+                                    referencedOuter -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (outer class of directly referenced): {0}", referencedOuter)));
+                        } catch (Exception ex) {
+                            loggingSwitch.logln(Level.SEVERE, "An exception was thrown during the retrieval of referenced classes of bytecode {0} for source {1}: {2}",
+                                    bytecode.getClassIdentifier().getFullName(),
+                                    source.getClassIdentifier().getFullName(),
+                                    ex.toString());
+                        }
+                    }
                 }
             }
 
