@@ -1,4 +1,4 @@
 .idea/
-assembly.iml
+*.iml
 target/
 **/*.class
