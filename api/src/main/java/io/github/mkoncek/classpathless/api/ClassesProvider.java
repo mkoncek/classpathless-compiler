@@ -23,8 +23,8 @@ public interface ClassesProvider {
      * Callback for compiler which provides, on demand, the dependencies the
      * compiler is missing.
      *
-     * @param names Names of classes the provider should return
-     * @return The bytecode files of all found classes
+     * @param names Names of classes the provider should return.
+     * @return The bytecode files of all found classes. Must not be null.
      */
     Collection<IdentifiedBytecode> getClass(ClassIdentifier... names);
 
@@ -32,7 +32,7 @@ public interface ClassesProvider {
      * Warning: may include lambdas and will include inner classes with $-notations.
      * Intentionally not using ClassIdentifier, but may change to it.
      *
-     * @return All fully qualified classes visible from the provider's classpath
+     * @return All fully qualified classes visible from the provider's classpath.
      */
     List<String> getClassPathListing();
 }
