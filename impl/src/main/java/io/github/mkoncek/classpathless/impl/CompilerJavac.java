@@ -80,10 +80,10 @@ public class CompilerJavac implements ClasspathlessCompiler {
                     .collect(Collectors.toUnmodifiableList()));
 
             var compilationUnits = Arrays.stream(javaSourceFiles)
-                    .map( source -> new InMemoryJavaSourceFileObject(source))
+                    .map(source -> new InMemoryJavaSourceFileObject(source))
                     .collect(Collectors.toList());
 
-            var availableClasses = initializePossibleDependence(classesProvider, loggingSwitch, javaSourceFiles);
+            var availableClasses = initializePossibleDependency(classesProvider, loggingSwitch, javaSourceFiles);
 
             loggingSwitch.logln(Level.INFO, "Found type names in the bytecode: {0}", availableClasses);
 
@@ -137,7 +137,8 @@ public class CompilerJavac implements ClasspathlessCompiler {
         }
     }
 
-    private static TreeSet<String> initializePossibleDependence(ClassesProvider classesProvider, LoggingSwitch loggingSwitch, IdentifiedSource[] javaSourceFiles) {
+    private static TreeSet<String> initializePossibleDependency(ClassesProvider classesProvider,
+            LoggingSwitch loggingSwitch, IdentifiedSource[] javaSourceFiles) {
         var availableClasses = new TreeSet<String>();
         for (var source : javaSourceFiles) {
             var bytecodes = classesProvider.getClass(source.getClassIdentifier());
@@ -152,8 +153,8 @@ public class CompilerJavac implements ClasspathlessCompiler {
         return availableClasses;
     }
 
-    private static void extractAllDependenciesCatched(ClassesProvider classesProvider, LoggingSwitch loggingSwitch, TreeSet<String> availableClasses,
-            IdentifiedSource source, IdentifiedBytecode bytecode) {
+    private static void extractAllDependenciesCatched(ClassesProvider classesProvider, LoggingSwitch loggingSwitch,
+            TreeSet<String> availableClasses, IdentifiedSource source, IdentifiedBytecode bytecode) {
         try {
             availableClasses.addAll(extractAllDependencies(classesProvider, loggingSwitch, bytecode));
         } catch (Exception ex) {
@@ -164,7 +165,8 @@ public class CompilerJavac implements ClasspathlessCompiler {
         }
     }
 
-    private static Collection<String> extractAllDependencies(ClassesProvider classesProvider, LoggingSwitch loggingSwitch, IdentifiedBytecode bytecode) {
+    private static Collection<String> extractAllDependencies(ClassesProvider classesProvider,
+            LoggingSwitch loggingSwitch, IdentifiedBytecode bytecode) {
         return BytecodeExtractorAccessor.extractDependenciesImpl(bytecode, classesProvider,
                 groupMember -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (nested group): '{0}'", groupMember),
                 directlyReferenced -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (directly referenced): '{0}'",
@@ -172,7 +174,8 @@ public class CompilerJavac implements ClasspathlessCompiler {
                         "Adding class to classpath listing (outer class of directly referenced): '{0}'", referencedOuter));
     }
 
-    private static boolean isBytecodeValid(IdentifiedBytecode bytecode, LoggingSwitch loggingSwitch, IdentifiedSource source) {
+    private static boolean isBytecodeValid(IdentifiedBytecode bytecode,
+            LoggingSwitch loggingSwitch, IdentifiedSource source) {
         if (bytecode == null) {
             loggingSwitch.logln(Level.WARNING, "ClassesProvider::getClass returned list contains null object for source '{0}'",
                     source.getClassIdentifier().getFullName());
@@ -187,7 +190,8 @@ public class CompilerJavac implements ClasspathlessCompiler {
         return true;
     }
 
-    private static boolean areBytecodesValid(LoggingSwitch loggingSwitch, IdentifiedSource source, Collection<IdentifiedBytecode> bytecodes) {
+    private static boolean areBytecodesValid(LoggingSwitch loggingSwitch,
+            IdentifiedSource source, Collection<IdentifiedBytecode> bytecodes) {
         if (bytecodes == null) {
             loggingSwitch.logln(Level.WARNING, "ClassesProvider::getClass returned null for source '{0}'",
                     source.getClassIdentifier().getFullName());
