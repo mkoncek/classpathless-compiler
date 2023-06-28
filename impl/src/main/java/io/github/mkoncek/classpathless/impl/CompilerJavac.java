@@ -157,7 +157,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
         try {
             availableClasses.addAll(extractAllDependencies(classesProvider, loggingSwitch, bytecode));
         } catch (Exception ex) {
-            loggingSwitch.logln(Level.SEVERE, "An exception was thrown during the retrieval of referenced classes of bytecode {0} for source {1}: {2}",
+            loggingSwitch.logln(Level.SEVERE, "An exception was thrown during the retrieval of referenced classes of bytecode '{0}' for source '{1}': '{2}'",
                     bytecode.getClassIdentifier().getFullName(),
                     source.getClassIdentifier().getFullName(),
                     ex.toString());
@@ -166,20 +166,20 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
     private static Collection<String> extractAllDependencies(ClassesProvider classesProvider, LoggingSwitch loggingSwitch, IdentifiedBytecode bytecode) {
         return BytecodeExtractorAccessor.extractDependenciesImpl(bytecode, classesProvider,
-                groupMember -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (nested group): {0}", groupMember),
-                directlyReferenced -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (directly referenced): {0}",
+                groupMember -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (nested group): '{0}'", groupMember),
+                directlyReferenced -> loggingSwitch.logln(Level.FINE, "Adding class to classpath listing (directly referenced): '{0}'",
                         directlyReferenced), referencedOuter -> loggingSwitch.logln(Level.FINE,
-                        "Adding class to classpath listing (outer class of directly referenced): {0}", referencedOuter));
+                        "Adding class to classpath listing (outer class of directly referenced): '{0}'", referencedOuter));
     }
 
     private static boolean isBytecodeValid(IdentifiedBytecode bytecode, LoggingSwitch loggingSwitch, IdentifiedSource source) {
         if (bytecode == null) {
-            loggingSwitch.logln(Level.WARNING, "ClassesProvider::getClass returned list contains null object for source {0}",
+            loggingSwitch.logln(Level.WARNING, "ClassesProvider::getClass returned list contains null object for source '{0}'",
                     source.getClassIdentifier().getFullName());
             return false;
         } else if (bytecode.getFile().length < 4) {
             // 0xCAFEBABE
-            loggingSwitch.logln(Level.SEVERE, "Ignoring invalid bytecode {0} for source {1}",
+            loggingSwitch.logln(Level.SEVERE, "Ignoring invalid bytecode '{0}' for source '{1}'",
                     bytecode.getClassIdentifier().getFullName(),
                     source.getClassIdentifier().getFullName());
             return false;
@@ -189,7 +189,7 @@ public class CompilerJavac implements ClasspathlessCompiler {
 
     private static boolean areBytecodesValid(LoggingSwitch loggingSwitch, IdentifiedSource source, Collection<IdentifiedBytecode> bytecodes) {
         if (bytecodes == null) {
-            loggingSwitch.logln(Level.WARNING, "ClassesProvider::getClass returned null for source {0}",
+            loggingSwitch.logln(Level.WARNING, "ClassesProvider::getClass returned null for source '{0}'",
                     source.getClassIdentifier().getFullName());
             return false;
         }
