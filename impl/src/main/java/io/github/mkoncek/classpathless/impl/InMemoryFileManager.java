@@ -94,7 +94,23 @@ public class InMemoryFileManager implements JavaFileManager {
     public Location getLocationForModule(Location location, JavaFileObject fo)
             throws IOException {
         loggingSwitch.trace(this, "getLocationForModule", location, fo);
-        var result = delegate.getLocationForModule(location, fo);
+        Location result = null;
+        if (StandardLocation.PATCH_MODULE_PATH.equals(location)) {
+            if (fo instanceof InMemoryJavaSourceFileObject) {
+                var name = InMemoryJavaSourceFileObject.class.cast(fo).getClassIdentifier().getFullName();
+                if (name.startsWith("java/")) {
+                    try {
+                        var moduleName = Class.forName(name.replace('/', '.').substring(0, name.length() - 5)).getModule().getName();
+                        result = new PatchModuleLocation(moduleName, fo.getName());
+                    } catch (ClassNotFoundException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+        }
+        if (result == null) {
+            result = delegate.getLocationForModule(location, fo);
+        }
         loggingSwitch.trace(result);
         return result;
     }
@@ -112,7 +128,11 @@ public class InMemoryFileManager implements JavaFileManager {
     public String inferModuleName(Location location) throws IOException {
         loggingSwitch.trace(this, "inferModuleName", location);
         String result;
-        result = delegate.inferModuleName(location);
+        if (location instanceof PatchModuleLocation) {
+            result = PatchModuleLocation.class.cast(location).getModuleName();
+        } else {
+            result = delegate.inferModuleName(location);
+        }
         loggingSwitch.trace(result);
         return result;
     }
@@ -238,7 +258,11 @@ public class InMemoryFileManager implements JavaFileManager {
     public boolean hasLocation(Location location) {
         loggingSwitch.trace(this, "hasLocation", location);
         boolean result;
-        result = delegate.hasLocation(location);
+        if (StandardLocation.PATCH_MODULE_PATH.equals(location)) {
+            result = true;
+        } else {
+            result = delegate.hasLocation(location);
+        }
         loggingSwitch.trace(result);
         return result;
     }
