@@ -23,6 +23,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.IdentifiedSource;
 
@@ -41,6 +42,7 @@ public class InMemoryJavaSourceFileObject extends IdentifiedJavaFileObject {
         this.source = source;
     }
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public InMemoryJavaSourceFileObject(String name, InputStream is) throws IOException {
         this(name);
         var byteStream = new ByteArrayOutputStream();
@@ -62,6 +64,7 @@ public class InMemoryJavaSourceFileObject extends IdentifiedJavaFileObject {
         this.source = source;
     }
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public InMemoryJavaSourceFileObject(Path path) throws IOException {
         this(path.toFile().getCanonicalPath().substring(1), new FileInputStream(path.toFile()));
     }

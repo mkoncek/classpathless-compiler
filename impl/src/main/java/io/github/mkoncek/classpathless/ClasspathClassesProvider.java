@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
@@ -40,6 +41,7 @@ public class ClasspathClassesProvider implements ClassesProvider {
     public List<String> classpath = Collections.emptyList();
     public Map<String, Path> classesToClassFilePaths;
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public ClasspathClassesProvider(String classpath) {
         super();
 
@@ -94,7 +96,6 @@ public class ClasspathClassesProvider implements ClassesProvider {
                     try {
                         Files.list(root).filter(p -> p.toString().endsWith(".jar")
                                 && !Files.isDirectory(p)).forEach(p -> result.add(p.toString()));
-
                     } catch (IOException ex) {
                         throw new UncheckedIOException(ex);
                     }

@@ -31,6 +31,7 @@ import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.mkoncek.classpathless.api.ClassIdentifier;
 import io.github.mkoncek.classpathless.api.ClassesProvider;
 import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
@@ -38,6 +39,7 @@ import io.github.mkoncek.classpathless.api.IdentifiedBytecode;
 public class NullClassesProvider implements ClassesProvider {
     private Map<String, IdentifiedBytecode> nameToBytecode;
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public NullClassesProvider(Map<String, IdentifiedBytecode> initialMapping) {
         this.nameToBytecode = new TreeMap<>(initialMapping);
 
@@ -75,6 +77,7 @@ public class NullClassesProvider implements ClassesProvider {
         }
     }
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public NullClassesProvider() {
         this(new TreeMap<>());
     }

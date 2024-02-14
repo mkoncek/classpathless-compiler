@@ -58,6 +58,7 @@ public class LoggingSwitch implements AutoCloseable {
         this.printer = printer;
     }
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public LoggingSwitch() {
         var logging = System.getProperty("io.github.mkoncek.cplc.logging");
         if (logging == null) {
