@@ -61,7 +61,6 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <spotbugs.version>4.4.2</spotbugs.version>
   </properties>
 
   <dependencies>
@@ -74,7 +73,7 @@
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
-      <version>${spotbugs.version}</version>
+      <version>4.8.3</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -187,7 +186,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>${spotbugs.version}</version>
+        <version>4.8.3.1</version>
         <executions>
           <execution>
             <id>check</id>
