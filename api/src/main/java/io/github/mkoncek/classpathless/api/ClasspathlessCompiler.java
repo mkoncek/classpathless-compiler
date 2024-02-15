@@ -19,19 +19,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 public interface ClasspathlessCompiler {
     static class Arguments {
         private boolean useHostSystemClasses = true;
         private boolean useHostJavaLangObject = true;
-        private List<String> compilerFlags = Collections.emptyList();
+        private List<String> compilerOptions = Collections.emptyList();
+        private Map<String, String> patchModules = Collections.emptyMap();
 
         /**
-         * @return A copy of the compiler argument strings.
+         * @return A view of the compiler argument strings.
          */
         public List<String> compilerOptions() {
-            return Collections.unmodifiableList(compilerFlags);
+            return Collections.unmodifiableList(compilerOptions);
         }
 
         /**
@@ -49,12 +52,19 @@ public interface ClasspathlessCompiler {
         }
 
         /**
+         * @return A view of the associations of package names to module names.
+         */
+        public Map<String, String> patchModules() {
+            return Collections.unmodifiableMap(patchModules);
+        }
+
+        /**
          * Set flags which will be passed to the compiler.
          * @param value A collection of compiler flags.
          * @return this.
          */
         public Arguments compilerOptions(Collection<String> value) {
-            compilerFlags = new ArrayList<>(value);
+            compilerOptions = new ArrayList<>(value);
             return this;
         }
 
@@ -79,6 +89,16 @@ public interface ClasspathlessCompiler {
          */
         public Arguments useHostJavaLangObject(boolean value) {
             useHostJavaLangObject = value;
+            return this;
+        }
+
+        /**
+         * Associate package names with module names.
+         * @param value The association.
+         * @return this.
+         */
+        public Arguments patchModules(Map<String, String> value) {
+            patchModules = new TreeMap<>(value);
             return this;
         }
     }

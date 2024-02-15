@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -53,6 +54,9 @@ public class Tool {
 
         @Parameter(names = {"-d"}, description = "Output directory")
         String output = ".";
+
+        @Parameter(names = {"--patch-module"}, description = "Association of package name to module name")
+        List<String> patchModules = new ArrayList<>();
     }
 
     public static void main(String[] args) throws IOException {
@@ -68,17 +72,23 @@ public class Tool {
         }
 
         var ccp = new ClasspathClassesProvider(arguments.classpath);
-
-        var compiler = new CompilerJavac(new CompilerJavac.Arguments().useHostSystemClasses(true));
-
+        var patchModules = new TreeMap<String, String>();
+        for (var patchModule : arguments.patchModules) {
+            var index = patchModule.indexOf(':');
+            if (index == -1) {
+                System.err.println("invalid value for the option --package-module '" + patchModule + "': missing ':'");
+                System.exit(1);
+            }
+            patchModules.put(patchModule.substring(0, index), patchModule.substring(index + 1));
+        }
+        var compiler = new CompilerJavac(new CompilerJavac.Arguments().useHostSystemClasses(true).patchModules(patchModules));
         var sources = new IdentifiedSource[arguments.inputs.size()];
 
         for (int i = 0; i != arguments.inputs.size(); ++i) {
             final var inputFile = arguments.inputs.get(i);
-
             var sourceObject = new InMemoryJavaSourceFileObject(Paths.get(inputFile));
-
             String fullyQualifiedName;
+
             try (var fis = new FileInputStream(inputFile)) {
                 fullyQualifiedName = new JavaSourceReader(fis).readSourcePackage();
             }
@@ -100,9 +110,7 @@ public class Tool {
             }
 
             var sourceIdentifier = new ClassIdentifier(fullyQualifiedName);
-
             var content = sourceObject.getCharContent(true).toString().getBytes(StandardCharsets.UTF_8);
-
             sources[i] = new IdentifiedSource(sourceIdentifier, content);
         }
 

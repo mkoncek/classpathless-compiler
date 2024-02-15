@@ -98,12 +98,13 @@ public class InMemoryFileManager implements JavaFileManager {
         if (StandardLocation.PATCH_MODULE_PATH.equals(location)) {
             if (fo instanceof InMemoryJavaSourceFileObject) {
                 var name = InMemoryJavaSourceFileObject.class.cast(fo).getClassIdentifier().getFullName();
-                if (name.startsWith("java/")) {
-                    try {
-                        var moduleName = Class.forName(name.replace('/', '.').substring(0, name.length() - 5)).getModule().getName();
+                name = name.substring(0, name.length() - 5).replace('/', '.');
+                var endIndex = name.lastIndexOf('.');
+                if (endIndex != -1) {
+                    var packageName = name.substring(0, endIndex);
+                    var moduleName = arguments.patchModules().get(packageName);
+                    if (moduleName != null) {
                         result = new PatchModuleLocation(moduleName, fo.getName());
-                    } catch (ClassNotFoundException ex) {
-                        throw new RuntimeException(ex);
                     }
                 }
             }
@@ -259,7 +260,7 @@ public class InMemoryFileManager implements JavaFileManager {
         loggingSwitch.trace(this, "hasLocation", location);
         boolean result;
         if (StandardLocation.PATCH_MODULE_PATH.equals(location)) {
-            result = true;
+            result = !arguments.patchModules().isEmpty();
         } else {
             result = delegate.hasLocation(location);
         }
@@ -271,7 +272,7 @@ public class InMemoryFileManager implements JavaFileManager {
     public String inferBinaryName(Location location, JavaFileObject file) {
         loggingSwitch.trace(this, "inferBinaryName", location, file);
         if (file instanceof InMemoryJavaClassFileObject) {
-            var realFile = (InMemoryJavaClassFileObject) file;
+            var realFile = InMemoryJavaClassFileObject.class.cast(file);
             var result = realFile.getClassIdentifier().getFullName();
             loggingSwitch.trace(result);
             return result;
