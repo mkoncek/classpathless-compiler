@@ -16,6 +16,7 @@
 package io.github.mkoncek.classpathless.impl;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import javax.tools.JavaCompiler;
 import javax.tools.StandardJavaFileManager;
@@ -26,7 +27,11 @@ public class SystemJavac {
     private StandardJavaFileManager fm = javac.getStandardFileManager(null, null, StandardCharsets.UTF_8);
 
     void compile(String... sources) {
-        if (!javac.getTask(null, fm, null, null, null, fm.getJavaFileObjects(sources)).call()) {
+        compile(null, sources);
+    }
+
+    void compile(List<String> options, String... sources) {
+        if (!javac.getTask(null, fm, null, options, null, fm.getJavaFileObjects(sources)).call()) {
             throw new RuntimeException("Compilation failed");
         }
     }
