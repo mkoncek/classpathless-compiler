@@ -18,6 +18,7 @@ package io.github.mkoncek.classpathless.api;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,7 +53,7 @@ public interface ClasspathlessCompiler {
         }
 
         /**
-         * @return A view of the associations of package names to module names.
+         * @return The view of package names mapped to module names.
          */
         public Map<String, String> patchModules() {
             return Collections.unmodifiableMap(patchModules);
@@ -64,7 +65,22 @@ public interface ClasspathlessCompiler {
          * @return this.
          */
         public Arguments compilerOptions(Collection<String> value) {
-            compilerOptions = new ArrayList<>(value);
+            compilerOptions = new ArrayList<String>(value.size());
+            Iterator<String> it = value.iterator();
+            while (it.hasNext()) {
+                String option = it.next();
+                if (option.equals("--patch-module")) {
+                    this.patchModules = new TreeMap<>();
+                    String patchModuleString = it.next();
+                    String[] patchModules = patchModuleString.split("=");
+                    String moduleName = patchModules[0];
+                    for (String packageName : patchModules[1].split(":")) {
+                        this.patchModules.put(packageName, moduleName);
+                    }
+                } else {
+                    compilerOptions.add(option);
+                }
+            }
             return this;
         }
 
@@ -89,16 +105,6 @@ public interface ClasspathlessCompiler {
          */
         public Arguments useHostJavaLangObject(boolean value) {
             useHostJavaLangObject = value;
-            return this;
-        }
-
-        /**
-         * Associate package names with module names.
-         * @param value The association.
-         * @return this.
-         */
-        public Arguments patchModules(Map<String, String> value) {
-            patchModules = new TreeMap<>(value);
             return this;
         }
     }

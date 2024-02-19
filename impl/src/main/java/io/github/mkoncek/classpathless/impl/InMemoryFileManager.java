@@ -102,7 +102,7 @@ public class InMemoryFileManager implements JavaFileManager {
                 var endIndex = name.lastIndexOf('.');
                 if (endIndex != -1) {
                     var packageName = name.substring(0, endIndex);
-                    var moduleName = arguments.patchModules().get(packageName);
+                    var moduleName = this.arguments.patchModules().get(packageName);
                     if (moduleName != null) {
                         result = new PatchModuleLocation(moduleName, fo.getName());
                     }
@@ -260,7 +260,7 @@ public class InMemoryFileManager implements JavaFileManager {
         loggingSwitch.trace(this, "hasLocation", location);
         boolean result;
         if (StandardLocation.PATCH_MODULE_PATH.equals(location)) {
-            result = !arguments.patchModules().isEmpty();
+            result = true;
         } else {
             result = delegate.hasLocation(location);
         }

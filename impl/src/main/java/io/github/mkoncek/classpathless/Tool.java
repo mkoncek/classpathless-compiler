@@ -25,7 +25,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.TreeMap;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -72,16 +71,11 @@ public class Tool {
         }
 
         var ccp = new ClasspathClassesProvider(arguments.classpath);
-        var patchModules = new TreeMap<String, String>();
-        for (var patchModule : arguments.patchModules) {
-            var index = patchModule.indexOf(':');
-            if (index == -1) {
-                System.err.println("invalid value for the option --package-module '" + patchModule + "': missing ':'");
-                System.exit(1);
-            }
-            patchModules.put(patchModule.substring(0, index), patchModule.substring(index + 1));
+        var cArguments = new CompilerJavac.Arguments().useHostSystemClasses(true);
+        if (!arguments.patchModules.isEmpty()) {
+            cArguments.compilerOptions(arguments.patchModules);
         }
-        var compiler = new CompilerJavac(new CompilerJavac.Arguments().useHostSystemClasses(true).patchModules(patchModules));
+        var compiler = new CompilerJavac(cArguments);
         var sources = new IdentifiedSource[arguments.inputs.size()];
 
         for (int i = 0; i != arguments.inputs.size(); ++i) {

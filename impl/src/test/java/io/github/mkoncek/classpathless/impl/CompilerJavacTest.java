@@ -24,7 +24,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.TreeSet;
 
@@ -220,7 +219,7 @@ public class CompilerJavacTest {
         try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/modules/Runnable.java")) {
             content = is.readAllBytes();
         }
-        var jc = new CompilerJavac(new Arguments().patchModules(Map.of("java.lang", "java.base")));
+        var jc = new CompilerJavac(new Arguments().compilerOptions(List.of("--patch-module", "java.base=java.lang")));
         var source = new IdentifiedSource(new ClassIdentifier("java.lang.Runnable"), content);
         var compilationResult = jc.compileClass(new NullClassesProvider(), printingListener, source);
         assertEquals(expectedBytecodeContents.size(), compilationResult.size());
@@ -257,7 +256,7 @@ public class CompilerJavacTest {
         try (var is = new FileInputStream("src/test/resources/io/github/mkoncek/classpathless/impl/modules/Filter.java")) {
             content = is.readAllBytes();
         }
-        var jc = new CompilerJavac(new Arguments().patchModules(Map.of("java.util.logging", "java.logging")));
+        var jc = new CompilerJavac(new Arguments().compilerOptions(List.of("--patch-module", "java.logging=java.util.logging")));
         var source = new IdentifiedSource(new ClassIdentifier("java.util.logging.Filter"), content);
         var compilationResult = jc.compileClass(new NullClassesProvider(), printingListener, source);
         assertEquals(expectedBytecodeContents.size(), compilationResult.size());
