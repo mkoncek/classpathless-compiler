@@ -72,9 +72,12 @@ public class Tool {
 
         var ccp = new ClasspathClassesProvider(arguments.classpath);
         var cArguments = new CompilerJavac.Arguments().useHostSystemClasses(true);
-        if (!arguments.patchModules.isEmpty()) {
-            cArguments.compilerOptions(arguments.patchModules);
+        var compilerOptions = new ArrayList<String>(0);
+        for (var patchModule : arguments.patchModules) {
+            compilerOptions.add("--patch-module");
+            compilerOptions.add(patchModule);
         }
+        cArguments.compilerOptions(compilerOptions);
         var compiler = new CompilerJavac(cArguments);
         var sources = new IdentifiedSource[arguments.inputs.size()];
 

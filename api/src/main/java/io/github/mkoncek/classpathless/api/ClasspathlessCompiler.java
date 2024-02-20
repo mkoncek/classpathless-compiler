@@ -29,7 +29,7 @@ public interface ClasspathlessCompiler {
         private boolean useHostSystemClasses = true;
         private boolean useHostJavaLangObject = true;
         private List<String> compilerOptions = Collections.emptyList();
-        private Map<String, String> patchModules = Collections.emptyMap();
+        private Map<String, String> patchModules = new TreeMap<>();
 
         /**
          * @return A view of the compiler argument strings.
@@ -70,7 +70,6 @@ public interface ClasspathlessCompiler {
             while (it.hasNext()) {
                 String option = it.next();
                 if (option.equals("--patch-module")) {
-                    this.patchModules = new TreeMap<>();
                     String patchModuleString = it.next();
                     String[] patchModules = patchModuleString.split("=");
                     String moduleName = patchModules[0];
