@@ -70,7 +70,6 @@ If you need to compile class in package belonging to any module, you have to set
 In addition, we had to change the syntax, to fit to FQN logic which CPLC depends on instead of files and dirs. Syntax for `--patch-module` when passed to CPLC is:
 
 ```
-javac -X 2>&1 | grep patch -A 2
   --patch-module <module>=<fqnOfPkg>(:<fqnOfPkg>)*
         Override or augment a module with classes and resources
         which are from given package, provided by fully qualified way
