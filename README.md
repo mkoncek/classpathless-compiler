@@ -29,6 +29,30 @@ If you need form some reason to work with `.java` filles and compile them on the
 
 Simply run `mvn install`.
 
+The project is available in maven repos:
+```
+   <properties>
+        ...
+        <cplc.version>2.3</cplc.version>
+    </properties>
+
+        <dependency>
+            <groupId>io.github.mkoncek</groupId>
+            <artifactId>classpathless-compiler-api</artifactId>
+            <version>${cplc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.mkoncek</groupId>
+            <artifactId>classpathless-compiler-util</artifactId>
+            <version>${cplc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.mkoncek</groupId>
+            <artifactId>classpathless-compiler</artifactId>
+            <version>${cplc.version}</version>
+        </dependency>
+```
+
 ## --patch-module
 
 Since JDK9, you can build modules intead of classical jars. The modules ensure harder encapsualtion, and are restricting **each package** to be meber of **exactly one module**.
