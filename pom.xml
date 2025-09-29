@@ -197,7 +197,6 @@
         <extensions>true</extensions>
         <configuration>
           <publishingServerId>central</publishingServerId>
-          <waitUntil>published</waitUntil>
         </configuration>
       </plugin>
     </plugins>
